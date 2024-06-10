@@ -63,11 +63,14 @@ class UARTTerminal(tk.Frame):
         self.text_area.insert(tk.END, data + '\n')
         self.text_area.yview(tk.END)
 
-    def send_data(self):
+    def send_data(self, data):
         if self.serial_port:
-            data = self.entry.get()
             self.serial_port.write(data.encode('utf-8'))
-            self.entry.delete(0, tk.END)
+
+    def send_entry_data(self):
+        data = self.entry.get()
+        self.send_data(data)
+        self.entry.delete(0, tk.END)
 
     def close(self):
         if self.serial_port:
