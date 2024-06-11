@@ -1,0 +1,23 @@
+main
+	__CC2DW
+	PORTS_Init
+	ADC_Init
+	UART1_Init
+	init_cpt_data
+	Interrupt_Init
+	ADC_Read
+		Delay_22us
+	Div_16X16_U
+	displayIntSingleDigit
+	Counting
+	send_data
+		UART_send_long_int
+			LongIntToStrWithZeros
+				Div_32x32_U
+		UART_Write
+			____DoIFC
+		UART_send_int
+			IntToStrWithZeros
+				Div_16X16_U
+interrupt
+	Counting
