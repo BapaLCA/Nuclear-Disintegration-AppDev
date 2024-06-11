@@ -27,6 +27,9 @@ void Counting() {
 
 // Fonction qui envoie les donnees stockees
 void send_data() {
+    UART_Write('w'); // On envoie une commande indiquant l'etat "Writing data" a l'app
+    UART_Write(0x0D);
+    UART_Write(0x0A);
     for(i=0;i<MAX;i++) {
         UART_send_long_int(i);
         UART_Write(';');
@@ -34,6 +37,9 @@ void send_data() {
         UART_Write(0x0D);
         UART_Write(0x0A);
         }
+    UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
+    UART_Write(0x0D);
+    UART_Write(0x0A);
 }
 
 // Initialise toutes les cellules du compteur a 0

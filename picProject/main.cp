@@ -169,6 +169,9 @@ void Counting() {
 
 
 void send_data() {
+ UART_Write('w');
+ UART_Write(0x0D);
+ UART_Write(0x0A);
  for(i=0;i<MAX;i++) {
  UART_send_long_int(i);
  UART_Write(';');
@@ -176,6 +179,9 @@ void send_data() {
  UART_Write(0x0D);
  UART_Write(0x0A);
  }
+ UART_Write('m');
+ UART_Write(0x0D);
+ UART_Write(0x0A);
 }
 
 
@@ -236,7 +242,7 @@ void interrupt(void) {
  cpt_data[cpt]++;
  }
  }
- if(cpt_data[cpt]==255){
+ if(cpt_data[cpt]==4){
  INTCON &= 0b00110111;
  flagWrite = 1;
  }
@@ -265,7 +271,7 @@ void main() {
  PORTB.B1 = 0;
 
 
- UART1_Init(57600);
+ UART1_Init(38400);
 
  delay_ms(1000);
  init_cpt_data();
@@ -339,6 +345,9 @@ void main() {
  INTCON &= 0b00110111;
  flagProcess = 0;
  prevrc1=1;
+ UART_Write('i');
+ UART_Write(0x0D);
+ UART_Write(0x0A);
  }
  }
  }
@@ -347,6 +356,9 @@ void main() {
 
  while(PORTC.B1==1){
  if(prevrc1==1){
+ UART_Write('m');
+ UART_Write(0x0D);
+ UART_Write(0x0A);
  cpt=0;
  init_cpt_data();
  flagProcess = 1;

@@ -700,6 +700,18 @@ _send_data:
 
 ;counting_functions.h,29 :: 		
 ;counting_functions.h,30 :: 		
+	MOVLW       119
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;counting_functions.h,31 :: 		
+	MOVLW       13
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;counting_functions.h,32 :: 		
+	MOVLW       10
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;counting_functions.h,33 :: 		
 	CLRF        _i+0 
 	CLRF        _i+1 
 	CLRF        _i+2 
@@ -722,17 +734,17 @@ L_send_data29:
 L__send_data85:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_send_data30
-;counting_functions.h,31 :: 		
+;counting_functions.h,34 :: 		
 	MOVF        _i+0, 0 
 	MOVWF       FARG_UART_send_long_int_d+0 
 	MOVF        _i+1, 0 
 	MOVWF       FARG_UART_send_long_int_d+1 
 	CALL        _UART_send_long_int+0, 0
-;counting_functions.h,32 :: 		
+;counting_functions.h,35 :: 		
 	MOVLW       59
 	MOVWF       FARG_UART_Write__data+0 
 	CALL        _UART_Write+0, 0
-;counting_functions.h,33 :: 		
+;counting_functions.h,36 :: 		
 	MOVLW       _cpt_data+0
 	ADDWF       _i+0, 0 
 	MOVWF       FSR0L+0 
@@ -746,15 +758,15 @@ L__send_data85:
 	MOVLW       0
 	MOVWF       FARG_UART_send_int_d+1 
 	CALL        _UART_send_int+0, 0
-;counting_functions.h,34 :: 		
+;counting_functions.h,37 :: 		
 	MOVLW       13
 	MOVWF       FARG_UART_Write__data+0 
 	CALL        _UART_Write+0, 0
-;counting_functions.h,35 :: 		
+;counting_functions.h,38 :: 		
 	MOVLW       10
 	MOVWF       FARG_UART_Write__data+0 
 	CALL        _UART_Write+0, 0
-;counting_functions.h,30 :: 		
+;counting_functions.h,33 :: 		
 	MOVLW       1
 	ADDWF       _i+0, 0 
 	MOVWF       R0 
@@ -775,18 +787,30 @@ L__send_data85:
 	MOVWF       _i+2 
 	MOVF        R3, 0 
 	MOVWF       _i+3 
-;counting_functions.h,36 :: 		
+;counting_functions.h,39 :: 		
 	GOTO        L_send_data29
 L_send_data30:
-;counting_functions.h,37 :: 		
+;counting_functions.h,40 :: 		
+	MOVLW       109
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;counting_functions.h,41 :: 		
+	MOVLW       13
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;counting_functions.h,42 :: 		
+	MOVLW       10
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;counting_functions.h,43 :: 		
 L_end_send_data:
 	RETURN      0
 ; end of _send_data
 
 _init_cpt_data:
 
-;counting_functions.h,40 :: 		
-;counting_functions.h,41 :: 		
+;counting_functions.h,46 :: 		
+;counting_functions.h,47 :: 		
 	CLRF        _i+0 
 	CLRF        _i+1 
 	CLRF        _i+2 
@@ -809,7 +833,7 @@ L_init_cpt_data32:
 L__init_cpt_data87:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_init_cpt_data33
-;counting_functions.h,42 :: 		
+;counting_functions.h,48 :: 		
 	MOVLW       _cpt_data+0
 	ADDWF       _i+0, 0 
 	MOVWF       FSR1L+0 
@@ -817,7 +841,7 @@ L__init_cpt_data87:
 	ADDWFC      _i+1, 0 
 	MOVWF       FSR1L+1 
 	CLRF        POSTINC1+0 
-;counting_functions.h,41 :: 		
+;counting_functions.h,47 :: 		
 	MOVLW       1
 	ADDWF       _i+0, 0 
 	MOVWF       R0 
@@ -838,10 +862,10 @@ L__init_cpt_data87:
 	MOVWF       _i+2 
 	MOVF        R3, 0 
 	MOVWF       _i+3 
-;counting_functions.h,43 :: 		
+;counting_functions.h,49 :: 		
 	GOTO        L_init_cpt_data32
 L_init_cpt_data33:
-;counting_functions.h,44 :: 		
+;counting_functions.h,50 :: 		
 L_end_init_cpt_data:
 	RETURN      0
 ; end of _init_cpt_data
@@ -978,7 +1002,7 @@ L__interrupt94:
 L_interrupt38:
 ;main.c,69 :: 		}
 L_interrupt37:
-;main.c,70 :: 		if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
+;main.c,70 :: 		if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       FSR0L+0 
@@ -988,7 +1012,7 @@ L_interrupt37:
 	MOVF        POSTINC0+0, 0 
 	MOVWF       R1 
 	MOVF        R1, 0 
-	XORLW       255
+	XORLW       4
 	BTFSS       STATUS+0, 2 
 	GOTO        L_interrupt39
 ;main.c,71 :: 		INTCON &= 0b00110111; // Desactive les interruptions
@@ -1048,10 +1072,11 @@ _main:
 	BCF         PORTE+0, 0 
 ;main.c,96 :: 		PORTB.B1 = 0;
 	BCF         PORTB+0, 1 
-;main.c,99 :: 		UART1_Init(57600); // Configuration de l'UART a une vitesse en Bauds donnee
+;main.c,99 :: 		UART1_Init(38400); // Configuration de l'UART a une vitesse en Bauds donnee
 	BSF         BAUDCON+0, 3, 0
-	CLRF        SPBRGH+0 
-	MOVLW       207
+	MOVLW       1
+	MOVWF       SPBRGH+0 
+	MOVLW       55
 	MOVWF       SPBRG+0 
 	BSF         TXSTA+0, 2, 0
 	CALL        _UART1_Init+0, 0
@@ -1346,19 +1371,31 @@ L__main108:
 	MOVWF       _prevrc1+0 
 	MOVLW       0
 	MOVWF       _prevrc1+1 
-;main.c,173 :: 		}
+;main.c,173 :: 		UART_Write('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
+	MOVLW       105
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;main.c,174 :: 		UART_Write(0x0D);
+	MOVLW       13
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;main.c,175 :: 		UART_Write(0x0A);
+	MOVLW       10
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;main.c,176 :: 		}
 L_main65:
-;main.c,174 :: 		}
+;main.c,177 :: 		}
 	GOTO        L_main63
 L_main64:
-;main.c,175 :: 		}
+;main.c,178 :: 		}
 	GOTO        L_main51
 L_main52:
-;main.c,179 :: 		while(PORTC.B1==1){
+;main.c,182 :: 		while(PORTC.B1==1){
 L_main66:
 	BTFSS       PORTC+0, 1 
 	GOTO        L_main67
-;main.c,180 :: 		if(prevrc1==1){
+;main.c,183 :: 		if(prevrc1==1){
 	MOVLW       0
 	XORWF       _prevrc1+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -1368,31 +1405,43 @@ L_main66:
 L__main109:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main68
-;main.c,181 :: 		cpt=0;           // On initialise le compteur
+;main.c,184 :: 		UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
+	MOVLW       109
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;main.c,185 :: 		UART_Write(0x0D);
+	MOVLW       13
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;main.c,186 :: 		UART_Write(0x0A);
+	MOVLW       10
+	MOVWF       FARG_UART_Write__data+0 
+	CALL        _UART_Write+0, 0
+;main.c,187 :: 		cpt=0;           // On initialise le compteur
 	CLRF        _cpt+0 
 	CLRF        _cpt+1 
-;main.c,182 :: 		init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
+;main.c,188 :: 		init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
 	CALL        _init_cpt_data+0, 0
-;main.c,183 :: 		flagProcess = 1;    // Met a jour le flag de sortie de boucle
+;main.c,189 :: 		flagProcess = 1;    // Met a jour le flag de sortie de boucle
 	MOVLW       1
 	MOVWF       _flagProcess+0 
 	MOVLW       0
 	MOVWF       _flagProcess+1 
-;main.c,184 :: 		prevrc1=0;          // Sauvegarde du dernier etat de RC1
+;main.c,190 :: 		prevrc1=0;          // Sauvegarde du dernier etat de RC1
 	CLRF        _prevrc1+0 
 	CLRF        _prevrc1+1 
-;main.c,185 :: 		INTCON |= 0b11001000; // Active les interruptions en dernier
+;main.c,191 :: 		INTCON |= 0b11001000; // Active les interruptions en dernier
 	MOVLW       200
 	IORWF       INTCON+0, 1 
-;main.c,186 :: 		}
+;main.c,192 :: 		}
 L_main68:
-;main.c,187 :: 		}
+;main.c,193 :: 		}
 	GOTO        L_main66
 L_main67:
-;main.c,188 :: 		}
+;main.c,194 :: 		}
 	GOTO        L_main44
 L_main45:
-;main.c,189 :: 		}
+;main.c,195 :: 		}
 L_end_main:
 	GOTO        $+0
 ; end of _main

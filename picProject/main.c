@@ -27,7 +27,7 @@
 
 // Guide //
 
-/* 
+/*
     Le programme commence en position Idle :
 -Choisissez le mode de mesure Erlang/Poisson avec le bouton RC2 : La LED RE0 indique le mode (eteinte : Erlang, allumee : Poisson)
 -Pour le mode Erlang : Utilisez le potentiometre P2 pour regler le k (nb d'impulsion a relever), sa valeur s'affiche sur l'afficheur 7 segments
@@ -45,7 +45,7 @@ volatile unsigned int prevrc0 = 1; // etat precedent de RC0 pour detection de fr
 volatile unsigned int prevrc1 = 1; // etat precedent de RC1 pour detection de front
 volatile unsigned int prevrc2 = 0; // etat precedent de RC2 pour detection de front
 volatile int flagWrite = 0; // Pour demander l'ecriture des donnees enregistrees
-     
+
 ////////////////////////////////// Fonction d'Interruption //////////////////////////////////////////
 
 void interrupt(void) {
@@ -67,17 +67,17 @@ void interrupt(void) {
                 cpt_data[cpt]++;    // Sauvegarde de la donnee dans le canal correspondant
                 }
             }
-            if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
+            if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
                 INTCON &= 0b00110111; // Desactive les interruptions
                 flagWrite = 1; // On active le flag d'ecriture des donnees
                 }
         }
-        
+
     if(mode==1){ //Poisson
             Counting(); // Comptage du nombre d'impulsion sur cpt lors de la detection d'une impulsion
         }
-    
-        
+
+
     while(PORTB.B7==1); // On attend que l'impulsion se termine pour sortir de l'interruption (necessaire lors de test par appui sur bouton)
     INTCON.RBIF = 0; // Reinitialise le flag d'interruption RBIF
 }
@@ -96,7 +96,7 @@ void main() {
     PORTB.B1 = 0;
     // J3 et J4 jumpers doivent etre places sur la position USB
     // SW1 doit activer le switch RC7 pour RX et SW2 doit activer le switch RC6 pour TX
-    UART1_Init(57600); // Configuration de l'UART a une vitesse en Bauds donnee
+    UART1_Init(38400); // Configuration de l'UART a une vitesse en Bauds donnee
 
     delay_ms(1000); // Attente de la stabilisation de l'UART
     init_cpt_data();// Initilisation du tableau de donnees
@@ -110,7 +110,7 @@ void main() {
             PORTE.B0=mode; // LED0 : Indique le mode de fonctionnement (Erlang ou Poisson)
             k=1+ADC_Read(10)/10;      // Conversion de la valeur analogique entre 1 et 9, a re-regler plus tard
             displayIntSingleDigit(k); // Affichage du k sur le premier digit 7 segments
-            
+
             // Selection du mode (0 : Erlang, 1 : Poisson)
             if(PORTC.B2==1){
                 if(prevrc2==1){
@@ -123,7 +123,7 @@ void main() {
                     }
                 while(PORTC.B2);
                 }
-            
+
             // Boucle de mesure, activee/desactivee lors de l'appui sur le bouton RC1 //
             while(flagProcess==1){
                 PORTE.B1=0;
@@ -141,7 +141,7 @@ void main() {
                           prevrc0=0;  // Sauvegarde du dernier etat de RC0
                           }
                 }
-                
+
                 if(mode==1){ // Poisson
                     flagStart=1;
                     if(PORTC.B0==1){
@@ -155,9 +155,9 @@ void main() {
                           flagWrite = 1; // On active le flag d'ecriture des donnees
                           }
                 }
-                
+
                 // Partie commune aux deux modes //
-                
+
                 if(flagWrite==1){ // Pour l'envoie des donnees
                     send_data(); // Envoie les donnees vers le terminal
                     init_cpt_data();
@@ -170,14 +170,20 @@ void main() {
                         INTCON &= 0b00110111; // Desactive les interruptions
                         flagProcess = 0;    // Met a jour le flag de sortie de boucle
                         prevrc1=1;          // Sauvegarde du dernier etat de RC1
+                        UART_Write('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
+                        UART_Write(0x0D);
+                        UART_Write(0x0A);
                         }
                     }
                 }
-                
+
 
             // Met en route les mesures lors de l'appui sur le bouton RC1 //
             while(PORTC.B1==1){
                 if(prevrc1==1){
+                    UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
+                    UART_Write(0x0D);
+                    UART_Write(0x0A);
                     cpt=0;           // On initialise le compteur
                     init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
                     flagProcess = 1;    // Met a jour le flag de sortie de boucle

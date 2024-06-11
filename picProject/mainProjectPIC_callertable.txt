@@ -11,13 +11,15 @@ main
 	displayIntSingleDigit
 	Counting
 	send_data
+		UART_Write
+			____DoIFC
 		UART_send_long_int
 			LongIntToStrWithZeros
 				Div_32x32_U
-		UART_Write
-			____DoIFC
 		UART_send_int
 			IntToStrWithZeros
 				Div_16X16_U
+	UART_Write
+		____DoIFC
 interrupt
 	Counting

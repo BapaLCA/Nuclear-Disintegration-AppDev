@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import scrolledtext, Button, Entry, OptionMenu, StringVar
+from tkinter import scrolledtext, Button, Entry, OptionMenu, StringVar, Label, Frame
 import serial
 import threading
 from serial.tools import list_ports
@@ -36,8 +36,16 @@ class UARTTerminal(tk.Frame):
         self.baudrate_menu = OptionMenu(self, self.baudrate_var, *self.baudrate_options)
         self.baudrate_menu.pack(side=tk.LEFT)
 
+        # Frame pour le label de statut
+        self.status_frame = Frame(self, bd=2, relief="groove")
+        self.status_frame.pack(side=tk.LEFT, padx=5, pady=5)
+
+        # Label pour afficher l'état
+        self.status_label = Label(self.status_frame, text="Status : Idle", font=("Arial", 10), width=15, anchor='w')
+        self.status_label.pack(side=tk.BOTTOM)
+
         # Port série
-        self.serial_port = None
+        self.serial_port = None # Valeur par défaut
 
     def get_available_ports(self):
         ports = [port.device for port in list_ports.comports()]
@@ -58,6 +66,16 @@ class UARTTerminal(tk.Frame):
             if self.serial_port and self.serial_port.in_waiting > 0:
                 data = self.serial_port.readline().decode('utf-8').strip()
                 self.update_text_area(data)
+                self.check_status(data)
+
+    def check_status(self, data):
+        # Vérifiez les valeurs spécifiques et mettez à jour le label
+        if data == "w":
+            self.status_label.config(text="Status : Writing")
+        elif data == "m":
+            self.status_label.config(text="Status : Measuring")
+        elif data == "i":
+            self.status_label.config(text="Status : Idle")
 
     def update_text_area(self, data):
         self.text_area.insert(tk.END, data + '\n')
