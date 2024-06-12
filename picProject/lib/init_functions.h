@@ -18,4 +18,5 @@ void Interrupt_Init()
     INTCON |= 0b11000000; // Activer les interruptions globales et peripheriques (GIE et PEIE)
     INTCON |= 0b00001000; // Activer les interruptions sur changement d'etat pour PORTB (RBIE)
     INTCON.RBIF = 0; // Flag d'interruption sur les PORTB 4 a 7
+    PIE1.RCIE = 1; // Activer l'interruption de réception UART
 }

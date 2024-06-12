@@ -6,7 +6,7 @@ Value=0
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=lib\counting_functions.h
+Value=main.c
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -25,13 +25,10 @@ Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
 File0=main.c
-File1=..\..\lib\init_functions.h
-File2=..\..\..\..\..\Public\Documents\Mikroelektronika\mikroC PRO for PIC\Defs\P18F4550.c
-File3=.\lib\UART_functions.h
-File4=.\lib\command_manager.h
-File5=.\lib\counting_functions.h
-File6=.\lib\init_functions.h
-Count=7
+File1=..\..\..\..\..\Public\Documents\Mikroelektronika\mikroC PRO for PIC\Defs\P18F4550.c
+File2=.\lib\UART_functions.h
+File3=.\lib\init_functions.h
+Count=4
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -57,7 +54,8 @@ Count=4
 VECTOR_MODE=0
 IVT_BASE=00000008
 [EXPANDED_NODES]
-Count=0
+0=mainProjectPIC.mcppi
+Count=1
 [LIB_EXPANDED_NODES]
 0=mikroE Libraries
 1=System Libraries

@@ -5,9 +5,6 @@ main
 	UART1_Init
 	init_cpt_data
 	Interrupt_Init
-	ADC_Read
-		Delay_22us
-	Div_16X16_U
 	displayIntSingleDigit
 	Counting
 	send_data

@@ -1054,6 +1054,7 @@ re3
 re3_bit
 read_write
 read_write_bit
+received_k_factor
 res032
 resume_
 resume__bit
@@ -1096,6 +1097,7 @@ setjmp
 shorttohex
 shorttostr
 shorttostrwithzeros
+singlechar
 smp
 smp_bit
 sofie

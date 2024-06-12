@@ -45,6 +45,8 @@ volatile unsigned int prevrc0 = 1; // etat precedent de RC0 pour detection de fr
 volatile unsigned int prevrc1 = 1; // etat precedent de RC1 pour detection de front
 volatile unsigned int prevrc2 = 0; // etat precedent de RC2 pour detection de front
 volatile int flagWrite = 0; // Pour demander l'ecriture des donnees enregistrees
+volatile char singlechar; // Caractère utilisé pour detecter l'arrivée d'une commande recue par UART
+volatile int received_k_factor=1;
 
 ////////////////////////////////// Fonction d'Interruption //////////////////////////////////////////
 
@@ -52,34 +54,69 @@ void interrupt(void) {
     // Active ou desactive le comptage lors de l'arrivee d'une impulsion sur RB7
     // Procede egalement a la sauvegarde et l'envoie des donnees par UART
     // Cette fonction d'interruption doit rester reservee a RB7, aucune autre pin ne doit etre utilisee
-    if(mode==0){ // Erlang
-        if(prevrb7==0){
-            cpt = 0;      // Initialisation du compteur
-            cptk = 0;     // Initialisation du compteur d'impulsion
-            flagStart = 1;// Lancement du compteur
-            prevrb7 = 1;  // Sauvegarde de l'etat precedent de RB7
+
+    if(PIR1.RCIF==1){ // Reception de données pour controler le PIC
+        char received_data = RCREG; // Lire les données reçues
+        PIR1.RCIF = 0; // Réinitialiser le drapeau d'interruption de réception
+        if (received_k_factor) {
+            if (received_data >= '0' && received_data <= '9') {
+                // Conversion du caractère en entier
+                k = received_data - '0';
             }
-        else{
-            cptk++;
-            if(cptk==k){ // Verification du nombre d'impulsion mesurees
-                flagStart = 0;      // Arret du compteur
-                prevrb7 = 0;        // Sauvegarde de l'etat precedent du compteur
-                cpt_data[cpt]++;    // Sauvegarde de la donnee dans le canal correspondant
-                }
+            received_k_factor = 0; // Réinitialiser après traitement
+        } else {
+            switch(received_data) {
+                case 'k':
+                    received_k_factor = 1; // On informe le PIC que le prochain caractere sera le facteur k
+                    break;
+                case 'g':  // Commande GO pour lancer les mesures
+                    flagProcess = 1;
+                    break;
+                case 's':  // Commande STOP pour arreter les mesures
+                    flagProcess = 0;
+                    break;
+                case 'e':  // Commande ERLANG pour selectionner le mode de mesure Erlang
+                    mode = 1;
+                    break;
+                case 'p':  // Commande POISSON pour selectionner le mode de mesure Poisson
+                    mode = 0;
+                    break;
+                default:
+                    // Aucune correspondance, on ignore la/les données reçues
+                    break;
             }
-            if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
-                INTCON &= 0b00110111; // Desactive les interruptions
-                flagWrite = 1; // On active le flag d'ecriture des donnees
+        }
+    }
+    else{
+        if(mode==0){ // Erlang
+            if(prevrb7==0){
+                cpt = 0;      // Initialisation du compteur
+                cptk = 0;     // Initialisation du compteur d'impulsion
+                flagStart = 1;// Lancement du compteur
+                prevrb7 = 1;  // Sauvegarde de l'etat precedent de RB7
                 }
+            else{
+                cptk++;
+                if(cptk==k){ // Verification du nombre d'impulsion mesurees
+                    flagStart = 0;      // Arret du compteur
+                    prevrb7 = 0;        // Sauvegarde de l'etat precedent du compteur
+                    cpt_data[cpt]++;    // Sauvegarde de la donnee dans le canal correspondant
+                    }
+                }
+                if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
+                    INTCON &= 0b00110111; // Desactive les interruptions
+                    flagWrite = 1; // On active le flag d'ecriture des donnees
+                    }
+            }
+
+        if(mode==1){ //Poisson
+                Counting(); // Comptage du nombre d'impulsion sur cpt lors de la detection d'une impulsion
+            }
+
+
+        while(PORTB.B7==1); // On attend que l'impulsion se termine pour sortir de l'interruption (necessaire lors de test par appui sur bouton)
+        INTCON.RBIF = 0; // Reinitialise le flag d'interruption RBIF
         }
-
-    if(mode==1){ //Poisson
-            Counting(); // Comptage du nombre d'impulsion sur cpt lors de la detection d'une impulsion
-        }
-
-
-    while(PORTB.B7==1); // On attend que l'impulsion se termine pour sortir de l'interruption (necessaire lors de test par appui sur bouton)
-    INTCON.RBIF = 0; // Reinitialise le flag d'interruption RBIF
 }
 
 
@@ -96,20 +133,21 @@ void main() {
     PORTB.B1 = 0;
     // J3 et J4 jumpers doivent etre places sur la position USB
     // SW1 doit activer le switch RC7 pour RX et SW2 doit activer le switch RC6 pour TX
-    UART1_Init(38400); // Configuration de l'UART a une vitesse en Bauds donnee
+    UART1_Init(9600); // Configuration de l'UART a une vitesse en Bauds donnee
 
     delay_ms(1000); // Attente de la stabilisation de l'UART
     init_cpt_data();// Initilisation du tableau de donnees
     Interrupt_Init(); // Configuration des registres d'interruption
-    INTCON &= 0b00110111; // Mais on conserve les interruptions desactivees pour le demarrage
+    INTCON.RBIE=0; // Mais on conserve les interruptions desactivees sur PORTB pour le demarrage
 
     // Boucle principale
     while (exitloop==0){
             PORTE.B1 = 1;  // LED1 : A l'arret (Idle)
             PORTE.B2 = 0;
             PORTE.B0=mode; // LED0 : Indique le mode de fonctionnement (Erlang ou Poisson)
-            k=1+ADC_Read(10)/10;      // Conversion de la valeur analogique entre 1 et 9, a re-regler plus tard
+            //k=1+ADC_Read(10)/10;      // Conversion de la valeur analogique entre 1 et 9, a re-regler plus tard
             displayIntSingleDigit(k); // Affichage du k sur le premier digit 7 segments
+
 
             // Selection du mode (0 : Erlang, 1 : Poisson)
             if(PORTC.B2==1){
@@ -151,7 +189,7 @@ void main() {
                       }
 
                       if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
-                          INTCON &= 0b00110111; // Desactive les interruptions
+                          INTCON &= 0b00110111; // Desactive toutes les interruptions pour l'ecriture
                           flagWrite = 1; // On active le flag d'ecriture des donnees
                           }
                 }
@@ -162,12 +200,12 @@ void main() {
                     send_data(); // Envoie les donnees vers le terminal
                     init_cpt_data();
                     flagWrite=0;
-                    INTCON |= 0b11001000; // Reactive les interruptions
+                    INTCON |= 0b11001000; // Reactive toutes les interruptions
                     }
 
                 while(PORTC.B1==1){ // Met en pause les mesures lors de l'appui sur le bouton RC1
                         if(prevrc1==0){
-                        INTCON &= 0b00110111; // Desactive les interruptions
+                        INTCON.RBIE=0; // Desactive les interruptions sur PORTB
                         flagProcess = 0;    // Met a jour le flag de sortie de boucle
                         prevrc1=1;          // Sauvegarde du dernier etat de RC1
                         UART_Write('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
@@ -188,7 +226,7 @@ void main() {
                     init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
                     flagProcess = 1;    // Met a jour le flag de sortie de boucle
                     prevrc1=0;          // Sauvegarde du dernier etat de RC1
-                    INTCON |= 0b11001000; // Active les interruptions en dernier
+                    INTCON.RBIE=1; // Active les interruptions sur PORTB en dernier
                     }
                 }
         }

@@ -211,6 +211,7 @@ void Interrupt_Init()
  INTCON |= 0b11000000;
  INTCON |= 0b00001000;
  INTCON.RBIF = 0;
+ PIE1.RCIE = 1;
 }
 #line 41 "C:/Users/romai/Documents/18F4550/Nuclear-Disintegration AppDev/picProject/main.c"
 volatile int mode=0;
@@ -220,6 +221,8 @@ volatile unsigned int prevrc0 = 1;
 volatile unsigned int prevrc1 = 1;
 volatile unsigned int prevrc2 = 0;
 volatile int flagWrite = 0;
+volatile char singlechar;
+volatile int received_k_factor=1;
 
 
 
@@ -227,6 +230,40 @@ void interrupt(void) {
 
 
 
+
+ if(PIR1.RCIF==1){
+ char received_data = RCREG;
+ PIR1.RCIF = 0;
+ if (received_k_factor) {
+ if (received_data >= '0' && received_data <= '9') {
+
+ k = received_data - '0';
+ }
+ received_k_factor = 0;
+ } else {
+ switch(received_data) {
+ case 'k':
+ received_k_factor = 1;
+ break;
+ case 'g':
+ flagProcess = 1;
+ break;
+ case 's':
+ flagProcess = 0;
+ break;
+ case 'e':
+ mode = 1;
+ break;
+ case 'p':
+ mode = 0;
+ break;
+ default:
+
+ break;
+ }
+ }
+ }
+ else{
  if(mode==0){
  if(prevrb7==0){
  cpt = 0;
@@ -255,6 +292,7 @@ void interrupt(void) {
 
  while(PORTB.B7==1);
  INTCON.RBIF = 0;
+ }
 }
 
 
@@ -271,20 +309,21 @@ void main() {
  PORTB.B1 = 0;
 
 
- UART1_Init(38400);
+ UART1_Init(9600);
 
  delay_ms(1000);
  init_cpt_data();
  Interrupt_Init();
- INTCON &= 0b00110111;
+ INTCON.RBIE=0;
 
 
  while (exitloop==0){
  PORTE.B1 = 1;
  PORTE.B2 = 0;
  PORTE.B0=mode;
- k=1+ADC_Read(10)/10;
+
  displayIntSingleDigit(k);
+
 
 
  if(PORTC.B2==1){
@@ -342,7 +381,7 @@ void main() {
 
  while(PORTC.B1==1){
  if(prevrc1==0){
- INTCON &= 0b00110111;
+ INTCON.RBIE=0;
  flagProcess = 0;
  prevrc1=1;
  UART_Write('i');
@@ -363,7 +402,7 @@ void main() {
  init_cpt_data();
  flagProcess = 1;
  prevrc1=0;
- INTCON |= 0b11001000;
+ INTCON.RBIE=1;
  }
  }
  }

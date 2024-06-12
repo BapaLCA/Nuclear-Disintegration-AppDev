@@ -7,7 +7,8 @@ from modules.terminalUART import *
 # Output Commands
 
 
-def readState(terminal):
-    data_to_send = 0x03010000
-    terminal.send_data(data_to_send)
+def setFactorK(terminal, user_input):
+    terminal.send_data('k') # On envoie le caractere 'k' pour indiquer au PIC qu'il s'agit d'un changement de valeur de k
+    terminal.send_data(user_input) # On envoie la valeur de k au PIC
+
 
