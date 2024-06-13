@@ -15,7 +15,7 @@ class UARTTerminal(tk.Frame):
         # Entry et bouton pour saisir et envoyer des données
         self.entry = Entry(self, font=("Arial", 12))
         self.entry.pack(side=tk.LEFT, expand=True, fill='x')
-        self.send_button = Button(self, text="Envoyer", command=self.send_data)
+        self.send_button = Button(self, text="Envoyer", command=self.send_data_entry)
         self.send_button.pack(side=tk.RIGHT)
 
         # Menu déroulant pour sélectionner le port COM
@@ -41,7 +41,7 @@ class UARTTerminal(tk.Frame):
         self.status_frame.pack(side=tk.LEFT, padx=5, pady=5)
 
         # Label pour afficher l'état
-        self.status_label = Label(self.status_frame, text="Status : Idle", font=("Arial", 10), width=15, anchor='w')
+        self.status_label = Label(self.status_frame, text="Status : Unknown", font=("Arial", 10), width=15, anchor='w')
         self.status_label.pack(side=tk.BOTTOM)
 
         # Port série
@@ -54,7 +54,7 @@ class UARTTerminal(tk.Frame):
     def connect(self):
         port = self.port_var.get()
         baudrate = int(self.baudrate_var.get())
-        if port and port != "Aucun port disponible":
+        if port and port != "No port available":
             self.serial_port = serial.Serial(port, baudrate, timeout=1)
             # Démarrer le thread pour lire les données UART
             self.read_thread = threading.Thread(target=self.read_uart)
@@ -82,10 +82,17 @@ class UARTTerminal(tk.Frame):
         self.text_area.yview(tk.END)
 
 
-    def send_data(self):
+    def send_data_entry(self):
         data = self.entry.get()
         self.serial_port.write(data.encode())
         self.entry.delete(0, tk.END)
+
+    def send_data(self, data):
+        if self.serial_port is not None:
+            self.serial_port.write(data.encode())
+            self.entry.delete(0, tk.END)
+        else:
+            print("Erreur: serial_port n'est pas initialisé.")
 
     def close(self):
         if self.serial_port:
