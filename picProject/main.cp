@@ -213,7 +213,53 @@ void Interrupt_Init()
  INTCON.RBIF = 0;
  PIE1.RCIE = 1;
 }
-#line 41 "C:/Users/romai/Documents/18F4550/Nuclear-Disintegration AppDev/picProject/main.c"
+#line 1 "c:/users/romai/documents/18f4550/nuclear-disintegration appdev/picproject/lib/command_manager.h"
+
+
+
+
+
+void UART_send_data(char c)
+{
+ while(!TXSTA.TRMT);
+ TXREG = c;
+}
+
+
+void start_measures(void)
+{
+ UART_send_data('m');
+ UART_send_data(0x0D);
+ UART_send_data(0x0A);
+ cpt=0;
+ init_cpt_data();
+ flagProcess = 1;
+ INTCON.RBIE=1;
+}
+
+
+void stop_measures(void)
+{
+ INTCON.RBIE=0;
+ flagProcess = 0;
+ UART_send_data('i');
+ UART_send_data(0x0D);
+ UART_send_data(0x0A);
+}
+
+
+void send_state(char state)
+{
+ if(state==1)
+ {
+ UART_send_data('m');
+ }
+ else
+ {
+ UART_send_data('i');
+ }
+}
+#line 42 "C:/Users/romai/Documents/18F4550/Nuclear-Disintegration AppDev/picProject/main.c"
 volatile int mode=0;
 volatile int k=1;
 volatile int exitloop = 0;
@@ -247,9 +293,21 @@ void interrupt(void) {
  break;
  case 'g':
  flagProcess = 1;
+ UART_send_data('m');
+ UART_send_data(0x0D);
+ UART_send_data(0x0A);
+ cpt=0;
+ init_cpt_data();
+ flagProcess = 1;
+ INTCON.RBIE=1;
  break;
  case 's':
  flagProcess = 0;
+ INTCON.RBIE=0;
+ flagProcess = 0;
+ UART_send_data('i');
+ UART_send_data(0x0D);
+ UART_send_data(0x0A);
  break;
  case 'e':
  mode = 1;
@@ -257,6 +315,8 @@ void interrupt(void) {
  case 'p':
  mode = 0;
  break;
+ case '?':
+ send_state(flagProcess);
  default:
 
  break;
@@ -364,7 +424,7 @@ void main() {
  while(PORTC.B0);
  }
 
- if(cpt_data[cpt]==255){
+ if(cpt_data[cpt]==4){
  INTCON &= 0b00110111;
  flagWrite = 1;
  }
@@ -381,9 +441,9 @@ void main() {
 
  while(PORTC.B1==1){
  if(prevrc1==0){
+ prevrc1=1;
  INTCON.RBIE=0;
  flagProcess = 0;
- prevrc1=1;
  UART_Write('i');
  UART_Write(0x0D);
  UART_Write(0x0A);
@@ -401,8 +461,8 @@ void main() {
  cpt=0;
  init_cpt_data();
  flagProcess = 1;
- prevrc1=0;
  INTCON.RBIE=1;
+ prevrc1=0;
  }
  }
  }

@@ -647,10 +647,10 @@ _Counting:
 	MOVLW       0
 	XORWF       _flagStart+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__Counting98
+	GOTO        L__Counting103
 	MOVLW       1
 	XORWF       _flagStart+0, 0 
-L__Counting98:
+L__Counting103:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_Counting27
 ;counting_functions.h,19 :: 		
@@ -674,10 +674,10 @@ L_Counting27:
 	XORWF       _cpt+1, 0 
 	SUBWF       R0, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__Counting99
+	GOTO        L__Counting104
 	MOVF        _cpt+0, 0 
 	SUBLW       0
-L__Counting99:
+L__Counting104:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_Counting28
 ;counting_functions.h,22 :: 		
@@ -720,18 +720,18 @@ L_send_data29:
 	MOVLW       0
 	SUBWF       _i+3, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__send_data101
+	GOTO        L__send_data106
 	MOVLW       0
 	SUBWF       _i+2, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__send_data101
+	GOTO        L__send_data106
 	MOVLW       4
 	SUBWF       _i+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__send_data101
+	GOTO        L__send_data106
 	MOVLW       0
 	SUBWF       _i+0, 0 
-L__send_data101:
+L__send_data106:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_send_data30
 ;counting_functions.h,34 :: 		
@@ -819,18 +819,18 @@ L_init_cpt_data32:
 	MOVLW       0
 	SUBWF       _i+3, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__init_cpt_data103
+	GOTO        L__init_cpt_data108
 	MOVLW       0
 	SUBWF       _i+2, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__init_cpt_data103
+	GOTO        L__init_cpt_data108
 	MOVLW       4
 	SUBWF       _i+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__init_cpt_data103
+	GOTO        L__init_cpt_data108
 	MOVLW       0
 	SUBWF       _i+0, 0 
-L__init_cpt_data103:
+L__init_cpt_data108:
 	BTFSC       STATUS+0, 0 
 	GOTO        L_init_cpt_data33
 ;counting_functions.h,48 :: 		
@@ -915,163 +915,314 @@ L_end_Interrupt_Init:
 	RETURN      0
 ; end of _Interrupt_Init
 
+_UART_send_data:
+
+;command_manager.h,6 :: 		
+;command_manager.h,8 :: 		
+L_UART_send_data35:
+	BTFSC       TXSTA+0, 1 
+	GOTO        L_UART_send_data36
+	GOTO        L_UART_send_data35
+L_UART_send_data36:
+;command_manager.h,9 :: 		
+	MOVF        FARG_UART_send_data_c+0, 0 
+	MOVWF       TXREG+0 
+;command_manager.h,10 :: 		
+L_end_UART_send_data:
+	RETURN      0
+; end of _UART_send_data
+
+_start_measures:
+
+;command_manager.h,13 :: 		
+;command_manager.h,15 :: 		
+	MOVLW       109
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;command_manager.h,16 :: 		
+	MOVLW       13
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;command_manager.h,17 :: 		
+	MOVLW       10
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;command_manager.h,18 :: 		
+	CLRF        _cpt+0 
+	CLRF        _cpt+1 
+;command_manager.h,19 :: 		
+	CALL        _init_cpt_data+0, 0
+;command_manager.h,20 :: 		
+	MOVLW       1
+	MOVWF       _flagProcess+0 
+	MOVLW       0
+	MOVWF       _flagProcess+1 
+;command_manager.h,21 :: 		
+	BSF         INTCON+0, 3 
+;command_manager.h,22 :: 		
+L_end_start_measures:
+	RETURN      0
+; end of _start_measures
+
+_stop_measures:
+
+;command_manager.h,25 :: 		
+;command_manager.h,27 :: 		
+	BCF         INTCON+0, 3 
+;command_manager.h,28 :: 		
+	CLRF        _flagProcess+0 
+	CLRF        _flagProcess+1 
+;command_manager.h,29 :: 		
+	MOVLW       105
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;command_manager.h,30 :: 		
+	MOVLW       13
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;command_manager.h,31 :: 		
+	MOVLW       10
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;command_manager.h,32 :: 		
+L_end_stop_measures:
+	RETURN      0
+; end of _stop_measures
+
+_send_state:
+
+;command_manager.h,35 :: 		
+;command_manager.h,37 :: 		
+	MOVF        FARG_send_state_state+0, 0 
+	XORLW       1
+	BTFSS       STATUS+0, 2 
+	GOTO        L_send_state37
+;command_manager.h,39 :: 		
+	MOVLW       109
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;command_manager.h,40 :: 		
+	GOTO        L_send_state38
+L_send_state37:
+;command_manager.h,43 :: 		
+	MOVLW       105
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;command_manager.h,44 :: 		
+L_send_state38:
+;command_manager.h,45 :: 		
+L_end_send_state:
+	RETURN      0
+; end of _send_state
+
 _interrupt:
 
-;main.c,53 :: 		void interrupt(void) {
-;main.c,58 :: 		if(PIR1.RCIF==1){ // Reception de données pour controler le PIC
+;main.c,54 :: 		void interrupt(void) {
+;main.c,59 :: 		if(PIR1.RCIF==1){ // Reception de données pour controler le PIC
 	BTFSS       PIR1+0, 5 
-	GOTO        L_interrupt35
-;main.c,59 :: 		char received_data = RCREG; // Lire les données reçues
+	GOTO        L_interrupt39
+;main.c,60 :: 		char received_data = RCREG; // Lire les données reçues
 	MOVF        RCREG+0, 0 
 	MOVWF       interrupt_received_data_L1+0 
-;main.c,60 :: 		PIR1.RCIF = 0; // Réinitialiser le drapeau d'interruption de réception
+;main.c,61 :: 		PIR1.RCIF = 0; // Réinitialiser le drapeau d'interruption de réception
 	BCF         PIR1+0, 5 
-;main.c,61 :: 		if (received_k_factor) {
+;main.c,62 :: 		if (received_k_factor) {
 	MOVF        _received_k_factor+0, 0 
 	IORWF       _received_k_factor+1, 0 
 	BTFSC       STATUS+0, 2 
-	GOTO        L_interrupt36
-;main.c,62 :: 		if (received_data >= '0' && received_data <= '9') {
+	GOTO        L_interrupt40
+;main.c,63 :: 		if (received_data >= '0' && received_data <= '9') {
 	MOVLW       48
 	SUBWF       interrupt_received_data_L1+0, 0 
 	BTFSS       STATUS+0, 0 
-	GOTO        L_interrupt39
+	GOTO        L_interrupt43
 	MOVF        interrupt_received_data_L1+0, 0 
 	SUBLW       57
 	BTFSS       STATUS+0, 0 
-	GOTO        L_interrupt39
-L__interrupt84:
-;main.c,64 :: 		k = received_data - '0';
+	GOTO        L_interrupt43
+L__interrupt89:
+;main.c,65 :: 		k = received_data - '0';
 	MOVLW       48
 	SUBWF       interrupt_received_data_L1+0, 0 
 	MOVWF       _k+0 
 	CLRF        _k+1 
 	MOVLW       0
 	SUBWFB      _k+1, 1 
-;main.c,65 :: 		}
-L_interrupt39:
-;main.c,66 :: 		received_k_factor = 0; // Réinitialiser après traitement
+;main.c,66 :: 		}
+L_interrupt43:
+;main.c,67 :: 		received_k_factor = 0; // Réinitialiser après traitement
 	CLRF        _received_k_factor+0 
 	CLRF        _received_k_factor+1 
-;main.c,67 :: 		} else {
-	GOTO        L_interrupt40
-L_interrupt36:
-;main.c,68 :: 		switch(received_data) {
-	GOTO        L_interrupt41
-;main.c,69 :: 		case 'k':
-L_interrupt43:
-;main.c,70 :: 		received_k_factor = 1; // On informe le PIC que le prochain caractere sera le facteur k
+;main.c,68 :: 		} else {
+	GOTO        L_interrupt44
+L_interrupt40:
+;main.c,69 :: 		switch(received_data) {
+	GOTO        L_interrupt45
+;main.c,70 :: 		case 'k':
+L_interrupt47:
+;main.c,71 :: 		received_k_factor = 1; // On informe le PIC que le prochain caractere sera le facteur k
 	MOVLW       1
 	MOVWF       _received_k_factor+0 
 	MOVLW       0
 	MOVWF       _received_k_factor+1 
-;main.c,71 :: 		break;
-	GOTO        L_interrupt42
-;main.c,72 :: 		case 'g':  // Commande GO pour lancer les mesures
-L_interrupt44:
-;main.c,73 :: 		flagProcess = 1;
+;main.c,72 :: 		break;
+	GOTO        L_interrupt46
+;main.c,73 :: 		case 'g':  // Commande GO pour lancer les mesures
+L_interrupt48:
+;main.c,74 :: 		flagProcess = 1;
 	MOVLW       1
 	MOVWF       _flagProcess+0 
 	MOVLW       0
 	MOVWF       _flagProcess+1 
-;main.c,74 :: 		break;
-	GOTO        L_interrupt42
-;main.c,75 :: 		case 's':  // Commande STOP pour arreter les mesures
-L_interrupt45:
-;main.c,76 :: 		flagProcess = 0;
+;main.c,75 :: 		UART_send_data('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
+	MOVLW       109
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;main.c,76 :: 		UART_send_data(0x0D); // Saut de ligne
+	MOVLW       13
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;main.c,77 :: 		UART_send_data(0x0A);
+	MOVLW       10
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;main.c,78 :: 		cpt=0;           // On initialise le compteur
+	CLRF        _cpt+0 
+	CLRF        _cpt+1 
+;main.c,79 :: 		init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
+	CALL        _init_cpt_data+0, 0
+;main.c,80 :: 		flagProcess = 1;    // Met a jour le flag de sortie de boucle
+	MOVLW       1
+	MOVWF       _flagProcess+0 
+	MOVLW       0
+	MOVWF       _flagProcess+1 
+;main.c,81 :: 		INTCON.RBIE=1; // Active les interruptions sur PORTB en dernier
+	BSF         INTCON+0, 3 
+;main.c,82 :: 		break;
+	GOTO        L_interrupt46
+;main.c,83 :: 		case 's':  // Commande STOP pour arreter les mesures
+L_interrupt49:
+;main.c,84 :: 		flagProcess = 0;
 	CLRF        _flagProcess+0 
 	CLRF        _flagProcess+1 
-;main.c,77 :: 		break;
-	GOTO        L_interrupt42
-;main.c,78 :: 		case 'e':  // Commande ERLANG pour selectionner le mode de mesure Erlang
-L_interrupt46:
-;main.c,79 :: 		mode = 1;
+;main.c,85 :: 		INTCON.RBIE=0; // Desactive les interruptions sur PORTB
+	BCF         INTCON+0, 3 
+;main.c,86 :: 		flagProcess = 0;    // Met a jour le flag de sortie de boucle
+	CLRF        _flagProcess+0 
+	CLRF        _flagProcess+1 
+;main.c,87 :: 		UART_send_data('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
+	MOVLW       105
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;main.c,88 :: 		UART_send_data(0x0D); // Saut de ligne
+	MOVLW       13
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;main.c,89 :: 		UART_send_data(0x0A);
+	MOVLW       10
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;main.c,90 :: 		break;
+	GOTO        L_interrupt46
+;main.c,91 :: 		case 'e':  // Commande ERLANG pour selectionner le mode de mesure Erlang
+L_interrupt50:
+;main.c,92 :: 		mode = 1;
 	MOVLW       1
 	MOVWF       _mode+0 
 	MOVLW       0
 	MOVWF       _mode+1 
-;main.c,80 :: 		break;
-	GOTO        L_interrupt42
-;main.c,81 :: 		case 'p':  // Commande POISSON pour selectionner le mode de mesure Poisson
-L_interrupt47:
-;main.c,82 :: 		mode = 0;
+;main.c,93 :: 		break;
+	GOTO        L_interrupt46
+;main.c,94 :: 		case 'p':  // Commande POISSON pour selectionner le mode de mesure Poisson
+L_interrupt51:
+;main.c,95 :: 		mode = 0;
 	CLRF        _mode+0 
 	CLRF        _mode+1 
-;main.c,83 :: 		break;
-	GOTO        L_interrupt42
-;main.c,84 :: 		default:
-L_interrupt48:
-;main.c,86 :: 		break;
-	GOTO        L_interrupt42
-;main.c,87 :: 		}
-L_interrupt41:
+;main.c,96 :: 		break;
+	GOTO        L_interrupt46
+;main.c,97 :: 		case '?': // Commande pour envoyer l'etat actuel du PIC18F4550
+L_interrupt52:
+;main.c,98 :: 		send_state(flagProcess);
+	MOVF        _flagProcess+0, 0 
+	MOVWF       FARG_send_state_state+0 
+	CALL        _send_state+0, 0
+;main.c,99 :: 		default:
+L_interrupt53:
+;main.c,101 :: 		break;
+	GOTO        L_interrupt46
+;main.c,102 :: 		}
+L_interrupt45:
 	MOVF        interrupt_received_data_L1+0, 0 
 	XORLW       107
 	BTFSC       STATUS+0, 2 
-	GOTO        L_interrupt43
+	GOTO        L_interrupt47
 	MOVF        interrupt_received_data_L1+0, 0 
 	XORLW       103
 	BTFSC       STATUS+0, 2 
-	GOTO        L_interrupt44
+	GOTO        L_interrupt48
 	MOVF        interrupt_received_data_L1+0, 0 
 	XORLW       115
 	BTFSC       STATUS+0, 2 
-	GOTO        L_interrupt45
+	GOTO        L_interrupt49
 	MOVF        interrupt_received_data_L1+0, 0 
 	XORLW       101
 	BTFSC       STATUS+0, 2 
-	GOTO        L_interrupt46
+	GOTO        L_interrupt50
 	MOVF        interrupt_received_data_L1+0, 0 
 	XORLW       112
 	BTFSC       STATUS+0, 2 
-	GOTO        L_interrupt47
-	GOTO        L_interrupt48
-L_interrupt42:
-;main.c,88 :: 		}
-L_interrupt40:
-;main.c,89 :: 		}
-	GOTO        L_interrupt49
-L_interrupt35:
-;main.c,91 :: 		if(mode==0){ // Erlang
+	GOTO        L_interrupt51
+	MOVF        interrupt_received_data_L1+0, 0 
+	XORLW       63
+	BTFSC       STATUS+0, 2 
+	GOTO        L_interrupt52
+	GOTO        L_interrupt53
+L_interrupt46:
+;main.c,103 :: 		}
+L_interrupt44:
+;main.c,104 :: 		}
+	GOTO        L_interrupt54
+L_interrupt39:
+;main.c,106 :: 		if(mode==0){ // Erlang
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__interrupt108
+	GOTO        L__interrupt117
 	MOVLW       0
 	XORWF       _mode+0, 0 
-L__interrupt108:
+L__interrupt117:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_interrupt50
-;main.c,92 :: 		if(prevrb7==0){
+	GOTO        L_interrupt55
+;main.c,107 :: 		if(prevrb7==0){
 	MOVLW       0
 	XORWF       _prevrb7+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__interrupt109
+	GOTO        L__interrupt118
 	MOVLW       0
 	XORWF       _prevrb7+0, 0 
-L__interrupt109:
+L__interrupt118:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_interrupt51
-;main.c,93 :: 		cpt = 0;      // Initialisation du compteur
+	GOTO        L_interrupt56
+;main.c,108 :: 		cpt = 0;      // Initialisation du compteur
 	CLRF        _cpt+0 
 	CLRF        _cpt+1 
-;main.c,94 :: 		cptk = 0;     // Initialisation du compteur d'impulsion
+;main.c,109 :: 		cptk = 0;     // Initialisation du compteur d'impulsion
 	CLRF        _cptk+0 
 	CLRF        _cptk+1 
-;main.c,95 :: 		flagStart = 1;// Lancement du compteur
+;main.c,110 :: 		flagStart = 1;// Lancement du compteur
 	MOVLW       1
 	MOVWF       _flagStart+0 
 	MOVLW       0
 	MOVWF       _flagStart+1 
-;main.c,96 :: 		prevrb7 = 1;  // Sauvegarde de l'etat precedent de RB7
+;main.c,111 :: 		prevrb7 = 1;  // Sauvegarde de l'etat precedent de RB7
 	MOVLW       1
 	MOVWF       _prevrb7+0 
 	MOVLW       0
 	MOVWF       _prevrb7+1 
-;main.c,97 :: 		}
-	GOTO        L_interrupt52
-L_interrupt51:
-;main.c,99 :: 		cptk++;
+;main.c,112 :: 		}
+	GOTO        L_interrupt57
+L_interrupt56:
+;main.c,114 :: 		cptk++;
 	MOVLW       1
 	ADDWF       _cptk+0, 0 
 	MOVWF       R0 
@@ -1082,23 +1233,23 @@ L_interrupt51:
 	MOVWF       _cptk+0 
 	MOVF        R1, 0 
 	MOVWF       _cptk+1 
-;main.c,100 :: 		if(cptk==k){ // Verification du nombre d'impulsion mesurees
+;main.c,115 :: 		if(cptk==k){ // Verification du nombre d'impulsion mesurees
 	MOVF        _cptk+1, 0 
 	XORWF       _k+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__interrupt110
+	GOTO        L__interrupt119
 	MOVF        _k+0, 0 
 	XORWF       _cptk+0, 0 
-L__interrupt110:
+L__interrupt119:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_interrupt53
-;main.c,101 :: 		flagStart = 0;      // Arret du compteur
+	GOTO        L_interrupt58
+;main.c,116 :: 		flagStart = 0;      // Arret du compteur
 	CLRF        _flagStart+0 
 	CLRF        _flagStart+1 
-;main.c,102 :: 		prevrb7 = 0;        // Sauvegarde de l'etat precedent du compteur
+;main.c,117 :: 		prevrb7 = 0;        // Sauvegarde de l'etat precedent du compteur
 	CLRF        _prevrb7+0 
 	CLRF        _prevrb7+1 
-;main.c,103 :: 		cpt_data[cpt]++;    // Sauvegarde de la donnee dans le canal correspondant
+;main.c,118 :: 		cpt_data[cpt]++;    // Sauvegarde de la donnee dans le canal correspondant
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       R1 
@@ -1114,11 +1265,11 @@ L__interrupt110:
 	MOVFF       R2, FSR1H+0
 	MOVF        R0, 0 
 	MOVWF       POSTINC1+0 
-;main.c,104 :: 		}
-L_interrupt53:
-;main.c,105 :: 		}
-L_interrupt52:
-;main.c,106 :: 		if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
+;main.c,119 :: 		}
+L_interrupt58:
+;main.c,120 :: 		}
+L_interrupt57:
+;main.c,121 :: 		if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       FSR0L+0 
@@ -1130,67 +1281,67 @@ L_interrupt52:
 	MOVF        R1, 0 
 	XORLW       4
 	BTFSS       STATUS+0, 2 
-	GOTO        L_interrupt54
-;main.c,107 :: 		INTCON &= 0b00110111; // Desactive les interruptions
+	GOTO        L_interrupt59
+;main.c,122 :: 		INTCON &= 0b00110111; // Desactive les interruptions
 	MOVLW       55
 	ANDWF       INTCON+0, 1 
-;main.c,108 :: 		flagWrite = 1; // On active le flag d'ecriture des donnees
+;main.c,123 :: 		flagWrite = 1; // On active le flag d'ecriture des donnees
 	MOVLW       1
 	MOVWF       _flagWrite+0 
 	MOVLW       0
 	MOVWF       _flagWrite+1 
-;main.c,109 :: 		}
-L_interrupt54:
-;main.c,110 :: 		}
-L_interrupt50:
-;main.c,112 :: 		if(mode==1){ //Poisson
+;main.c,124 :: 		}
+L_interrupt59:
+;main.c,125 :: 		}
+L_interrupt55:
+;main.c,127 :: 		if(mode==1){ //Poisson
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__interrupt111
+	GOTO        L__interrupt120
 	MOVLW       1
 	XORWF       _mode+0, 0 
-L__interrupt111:
+L__interrupt120:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_interrupt55
-;main.c,113 :: 		Counting(); // Comptage du nombre d'impulsion sur cpt lors de la detection d'une impulsion
+	GOTO        L_interrupt60
+;main.c,128 :: 		Counting(); // Comptage du nombre d'impulsion sur cpt lors de la detection d'une impulsion
 	CALL        _Counting+0, 0
-;main.c,114 :: 		}
-L_interrupt55:
-;main.c,117 :: 		while(PORTB.B7==1); // On attend que l'impulsion se termine pour sortir de l'interruption (necessaire lors de test par appui sur bouton)
-L_interrupt56:
+;main.c,129 :: 		}
+L_interrupt60:
+;main.c,132 :: 		while(PORTB.B7==1); // On attend que l'impulsion se termine pour sortir de l'interruption (necessaire lors de test par appui sur bouton)
+L_interrupt61:
 	BTFSS       PORTB+0, 7 
-	GOTO        L_interrupt57
-	GOTO        L_interrupt56
-L_interrupt57:
-;main.c,118 :: 		INTCON.RBIF = 0; // Reinitialise le flag d'interruption RBIF
+	GOTO        L_interrupt62
+	GOTO        L_interrupt61
+L_interrupt62:
+;main.c,133 :: 		INTCON.RBIF = 0; // Reinitialise le flag d'interruption RBIF
 	BCF         INTCON+0, 0 
-;main.c,119 :: 		}
-L_interrupt49:
-;main.c,120 :: 		}
+;main.c,134 :: 		}
+L_interrupt54:
+;main.c,135 :: 		}
 L_end_interrupt:
-L__interrupt107:
+L__interrupt116:
 	RETFIE      1
 ; end of _interrupt
 
 _main:
 
-;main.c,125 :: 		void main() {
-;main.c,127 :: 		PORTS_Init();  // On initialise les differents PORTs
+;main.c,140 :: 		void main() {
+;main.c,142 :: 		PORTS_Init();  // On initialise les differents PORTs
 	CALL        _PORTS_Init+0, 0
-;main.c,128 :: 		ADC_Init(); // On initialise le convertisseur ADC
+;main.c,143 :: 		ADC_Init(); // On initialise le convertisseur ADC
 	CALL        _ADC_Init+0, 0
-;main.c,129 :: 		ADCON0 = 0;
+;main.c,144 :: 		ADCON0 = 0;
 	CLRF        ADCON0+0 
-;main.c,130 :: 		PORTE.B1 = 0;
+;main.c,145 :: 		PORTE.B1 = 0;
 	BCF         PORTE+0, 1 
-;main.c,131 :: 		PORTE.B2 = 0;
+;main.c,146 :: 		PORTE.B2 = 0;
 	BCF         PORTE+0, 2 
-;main.c,132 :: 		PORTE.B0 = 0;
+;main.c,147 :: 		PORTE.B0 = 0;
 	BCF         PORTE+0, 0 
-;main.c,133 :: 		PORTB.B1 = 0;
+;main.c,148 :: 		PORTB.B1 = 0;
 	BCF         PORTB+0, 1 
-;main.c,136 :: 		UART1_Init(9600); // Configuration de l'UART a une vitesse en Bauds donnee
+;main.c,151 :: 		UART1_Init(9600); // Configuration de l'UART a une vitesse en Bauds donnee
 	BSF         BAUDCON+0, 3, 0
 	MOVLW       4
 	MOVWF       SPBRGH+0 
@@ -1198,183 +1349,183 @@ _main:
 	MOVWF       SPBRG+0 
 	BSF         TXSTA+0, 2, 0
 	CALL        _UART1_Init+0, 0
-;main.c,138 :: 		delay_ms(1000); // Attente de la stabilisation de l'UART
+;main.c,153 :: 		delay_ms(1000); // Attente de la stabilisation de l'UART
 	MOVLW       61
 	MOVWF       R11, 0
 	MOVLW       225
 	MOVWF       R12, 0
 	MOVLW       63
 	MOVWF       R13, 0
-L_main58:
+L_main63:
 	DECFSZ      R13, 1, 1
-	BRA         L_main58
+	BRA         L_main63
 	DECFSZ      R12, 1, 1
-	BRA         L_main58
+	BRA         L_main63
 	DECFSZ      R11, 1, 1
-	BRA         L_main58
+	BRA         L_main63
 	NOP
 	NOP
-;main.c,139 :: 		init_cpt_data();// Initilisation du tableau de donnees
+;main.c,154 :: 		init_cpt_data();// Initilisation du tableau de donnees
 	CALL        _init_cpt_data+0, 0
-;main.c,140 :: 		Interrupt_Init(); // Configuration des registres d'interruption
+;main.c,155 :: 		Interrupt_Init(); // Configuration des registres d'interruption
 	CALL        _Interrupt_Init+0, 0
-;main.c,141 :: 		INTCON.RBIE=0; // Mais on conserve les interruptions desactivees sur PORTB pour le demarrage
+;main.c,156 :: 		INTCON.RBIE=0; // Mais on conserve les interruptions desactivees sur PORTB pour le demarrage
 	BCF         INTCON+0, 3 
-;main.c,144 :: 		while (exitloop==0){
-L_main59:
+;main.c,159 :: 		while (exitloop==0){
+L_main64:
 	MOVLW       0
 	XORWF       _exitloop+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main113
+	GOTO        L__main122
 	MOVLW       0
 	XORWF       _exitloop+0, 0 
-L__main113:
+L__main122:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_main60
-;main.c,145 :: 		PORTE.B1 = 1;  // LED1 : A l'arret (Idle)
+	GOTO        L_main65
+;main.c,160 :: 		PORTE.B1 = 1;  // LED1 : A l'arret (Idle)
 	BSF         PORTE+0, 1 
-;main.c,146 :: 		PORTE.B2 = 0;
+;main.c,161 :: 		PORTE.B2 = 0;
 	BCF         PORTE+0, 2 
-;main.c,147 :: 		PORTE.B0=mode; // LED0 : Indique le mode de fonctionnement (Erlang ou Poisson)
+;main.c,162 :: 		PORTE.B0=mode; // LED0 : Indique le mode de fonctionnement (Erlang ou Poisson)
 	BTFSC       _mode+0, 0 
-	GOTO        L__main114
+	GOTO        L__main123
 	BCF         PORTE+0, 0 
-	GOTO        L__main115
-L__main114:
+	GOTO        L__main124
+L__main123:
 	BSF         PORTE+0, 0 
-L__main115:
-;main.c,149 :: 		displayIntSingleDigit(k); // Affichage du k sur le premier digit 7 segments
+L__main124:
+;main.c,164 :: 		displayIntSingleDigit(k); // Affichage du k sur le premier digit 7 segments
 	MOVF        _k+0, 0 
 	MOVWF       FARG_displayIntSingleDigit_nb+0 
 	MOVF        _k+1, 0 
 	MOVWF       FARG_displayIntSingleDigit_nb+1 
 	CALL        _displayIntSingleDigit+0, 0
-;main.c,153 :: 		if(PORTC.B2==1){
+;main.c,168 :: 		if(PORTC.B2==1){
 	BTFSS       PORTC+0, 2 
-	GOTO        L_main61
-;main.c,154 :: 		if(prevrc2==1){
+	GOTO        L_main66
+;main.c,169 :: 		if(prevrc2==1){
 	MOVLW       0
 	XORWF       _prevrc2+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main116
+	GOTO        L__main125
 	MOVLW       1
 	XORWF       _prevrc2+0, 0 
-L__main116:
+L__main125:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_main62
-;main.c,155 :: 		prevrc2=0;
+	GOTO        L_main67
+;main.c,170 :: 		prevrc2=0;
 	CLRF        _prevrc2+0 
 	CLRF        _prevrc2+1 
-;main.c,156 :: 		mode=0;
+;main.c,171 :: 		mode=0;
 	CLRF        _mode+0 
 	CLRF        _mode+1 
-;main.c,157 :: 		}
-	GOTO        L_main63
-L_main62:
-;main.c,159 :: 		prevrc2=1;
+;main.c,172 :: 		}
+	GOTO        L_main68
+L_main67:
+;main.c,174 :: 		prevrc2=1;
 	MOVLW       1
 	MOVWF       _prevrc2+0 
 	MOVLW       0
 	MOVWF       _prevrc2+1 
-;main.c,160 :: 		mode=1;
+;main.c,175 :: 		mode=1;
 	MOVLW       1
 	MOVWF       _mode+0 
 	MOVLW       0
 	MOVWF       _mode+1 
-;main.c,161 :: 		}
-L_main63:
-;main.c,162 :: 		while(PORTC.B2);
-L_main64:
+;main.c,176 :: 		}
+L_main68:
+;main.c,177 :: 		while(PORTC.B2);
+L_main69:
 	BTFSS       PORTC+0, 2 
-	GOTO        L_main65
-	GOTO        L_main64
-L_main65:
-;main.c,163 :: 		}
-L_main61:
-;main.c,166 :: 		while(flagProcess==1){
+	GOTO        L_main70
+	GOTO        L_main69
+L_main70:
+;main.c,178 :: 		}
 L_main66:
+;main.c,181 :: 		while(flagProcess==1){
+L_main71:
 	MOVLW       0
 	XORWF       _flagProcess+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main117
+	GOTO        L__main126
 	MOVLW       1
 	XORWF       _flagProcess+0, 0 
-L__main117:
+L__main126:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_main67
-;main.c,167 :: 		PORTE.B1=0;
+	GOTO        L_main72
+;main.c,182 :: 		PORTE.B1=0;
 	BCF         PORTE+0, 1 
-;main.c,168 :: 		PORTE.B0=mode; // Affichage du mode de mesure
+;main.c,183 :: 		PORTE.B0=mode; // Affichage du mode de mesure
 	BTFSC       _mode+0, 0 
-	GOTO        L__main118
+	GOTO        L__main127
 	BCF         PORTE+0, 0 
-	GOTO        L__main119
-L__main118:
+	GOTO        L__main128
+L__main127:
 	BSF         PORTE+0, 0 
-L__main119:
-;main.c,169 :: 		PORTE.B2=1; // LED2 : En cours d'execution
+L__main128:
+;main.c,184 :: 		PORTE.B2=1; // LED2 : En cours d'execution
 	BSF         PORTE+0, 2 
-;main.c,171 :: 		if(mode==0){ // Erlang
+;main.c,186 :: 		if(mode==0){ // Erlang
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main120
+	GOTO        L__main129
 	MOVLW       0
 	XORWF       _mode+0, 0 
-L__main120:
+L__main129:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_main68
-;main.c,172 :: 		if(PORTC.B0==1){
+	GOTO        L_main73
+;main.c,187 :: 		if(PORTC.B0==1){
 	BTFSS       PORTC+0, 0 
-	GOTO        L_main69
-;main.c,173 :: 		if(prevrc0==0){
+	GOTO        L_main74
+;main.c,188 :: 		if(prevrc0==0){
 	MOVLW       0
 	XORWF       _prevrc0+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main121
+	GOTO        L__main130
 	MOVLW       0
 	XORWF       _prevrc0+0, 0 
-L__main121:
+L__main130:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_main70
-;main.c,174 :: 		Counting(); // Incrementation du compteur
+	GOTO        L_main75
+;main.c,189 :: 		Counting(); // Incrementation du compteur
 	CALL        _Counting+0, 0
-;main.c,175 :: 		prevrc0=1;
+;main.c,190 :: 		prevrc0=1;
 	MOVLW       1
 	MOVWF       _prevrc0+0 
 	MOVLW       0
 	MOVWF       _prevrc0+1 
-;main.c,176 :: 		}
-L_main70:
-;main.c,177 :: 		}
-	GOTO        L_main71
-L_main69:
-;main.c,179 :: 		prevrc0=0;  // Sauvegarde du dernier etat de RC0
+;main.c,191 :: 		}
+L_main75:
+;main.c,192 :: 		}
+	GOTO        L_main76
+L_main74:
+;main.c,194 :: 		prevrc0=0;  // Sauvegarde du dernier etat de RC0
 	CLRF        _prevrc0+0 
 	CLRF        _prevrc0+1 
-;main.c,180 :: 		}
-L_main71:
-;main.c,181 :: 		}
-L_main68:
-;main.c,183 :: 		if(mode==1){ // Poisson
+;main.c,195 :: 		}
+L_main76:
+;main.c,196 :: 		}
+L_main73:
+;main.c,198 :: 		if(mode==1){ // Poisson
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main122
+	GOTO        L__main131
 	MOVLW       1
 	XORWF       _mode+0, 0 
-L__main122:
+L__main131:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_main72
-;main.c,184 :: 		flagStart=1;
+	GOTO        L_main77
+;main.c,199 :: 		flagStart=1;
 	MOVLW       1
 	MOVWF       _flagStart+0 
 	MOVLW       0
 	MOVWF       _flagStart+1 
-;main.c,185 :: 		if(PORTC.B0==1){
+;main.c,200 :: 		if(PORTC.B0==1){
 	BTFSS       PORTC+0, 0 
-	GOTO        L_main73
-;main.c,186 :: 		cpt_data[cpt]++; // Enregistrement sur le canau correspondant au nb d'impulsion mesurees
+	GOTO        L_main78
+;main.c,201 :: 		cpt_data[cpt]++; // Enregistrement sur le canau correspondant au nb d'impulsion mesurees
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       R1 
@@ -1390,18 +1541,18 @@ L__main122:
 	MOVFF       R2, FSR1H+0
 	MOVF        R0, 0 
 	MOVWF       POSTINC1+0 
-;main.c,187 :: 		cpt=0;          // Reset du compteur
+;main.c,202 :: 		cpt=0;          // Reset du compteur
 	CLRF        _cpt+0 
 	CLRF        _cpt+1 
-;main.c,188 :: 		while(PORTC.B0); // On attend que le niveau haut d'horloge se termine
-L_main74:
+;main.c,203 :: 		while(PORTC.B0); // On attend que le niveau haut d'horloge se termine
+L_main79:
 	BTFSS       PORTC+0, 0 
-	GOTO        L_main75
-	GOTO        L_main74
-L_main75:
-;main.c,189 :: 		}
-L_main73:
-;main.c,191 :: 		if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
+	GOTO        L_main80
+	GOTO        L_main79
+L_main80:
+;main.c,204 :: 		}
+L_main78:
+;main.c,206 :: 		if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       FSR0L+0 
@@ -1411,137 +1562,137 @@ L_main73:
 	MOVF        POSTINC0+0, 0 
 	MOVWF       R1 
 	MOVF        R1, 0 
-	XORLW       255
+	XORLW       4
 	BTFSS       STATUS+0, 2 
-	GOTO        L_main76
-;main.c,192 :: 		INTCON &= 0b00110111; // Desactive toutes les interruptions pour l'ecriture
+	GOTO        L_main81
+;main.c,207 :: 		INTCON &= 0b00110111; // Desactive toutes les interruptions pour l'ecriture
 	MOVLW       55
 	ANDWF       INTCON+0, 1 
-;main.c,193 :: 		flagWrite = 1; // On active le flag d'ecriture des donnees
+;main.c,208 :: 		flagWrite = 1; // On active le flag d'ecriture des donnees
 	MOVLW       1
 	MOVWF       _flagWrite+0 
 	MOVLW       0
 	MOVWF       _flagWrite+1 
-;main.c,194 :: 		}
-L_main76:
-;main.c,195 :: 		}
-L_main72:
-;main.c,199 :: 		if(flagWrite==1){ // Pour l'envoie des donnees
+;main.c,209 :: 		}
+L_main81:
+;main.c,210 :: 		}
+L_main77:
+;main.c,214 :: 		if(flagWrite==1){ // Pour l'envoie des donnees
 	MOVLW       0
 	XORWF       _flagWrite+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main123
+	GOTO        L__main132
 	MOVLW       1
 	XORWF       _flagWrite+0, 0 
-L__main123:
+L__main132:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_main77
-;main.c,200 :: 		send_data(); // Envoie les donnees vers le terminal
+	GOTO        L_main82
+;main.c,215 :: 		send_data(); // Envoie les donnees vers le terminal
 	CALL        _send_data+0, 0
-;main.c,201 :: 		init_cpt_data();
+;main.c,216 :: 		init_cpt_data();
 	CALL        _init_cpt_data+0, 0
-;main.c,202 :: 		flagWrite=0;
+;main.c,217 :: 		flagWrite=0;
 	CLRF        _flagWrite+0 
 	CLRF        _flagWrite+1 
-;main.c,203 :: 		INTCON |= 0b11001000; // Reactive toutes les interruptions
+;main.c,218 :: 		INTCON |= 0b11001000; // Reactive toutes les interruptions
 	MOVLW       200
 	IORWF       INTCON+0, 1 
-;main.c,204 :: 		}
-L_main77:
-;main.c,206 :: 		while(PORTC.B1==1){ // Met en pause les mesures lors de l'appui sur le bouton RC1
-L_main78:
+;main.c,219 :: 		}
+L_main82:
+;main.c,221 :: 		while(PORTC.B1==1){ // Met en pause les mesures lors de l'appui sur le bouton RC1
+L_main83:
 	BTFSS       PORTC+0, 1 
-	GOTO        L_main79
-;main.c,207 :: 		if(prevrc1==0){
+	GOTO        L_main84
+;main.c,222 :: 		if(prevrc1==0){
 	MOVLW       0
 	XORWF       _prevrc1+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main124
+	GOTO        L__main133
 	MOVLW       0
 	XORWF       _prevrc1+0, 0 
-L__main124:
+L__main133:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_main80
-;main.c,208 :: 		INTCON.RBIE=0; // Desactive les interruptions sur PORTB
-	BCF         INTCON+0, 3 
-;main.c,209 :: 		flagProcess = 0;    // Met a jour le flag de sortie de boucle
-	CLRF        _flagProcess+0 
-	CLRF        _flagProcess+1 
-;main.c,210 :: 		prevrc1=1;          // Sauvegarde du dernier etat de RC1
+	GOTO        L_main85
+;main.c,223 :: 		prevrc1=1;          // Sauvegarde du dernier etat de RC1
 	MOVLW       1
 	MOVWF       _prevrc1+0 
 	MOVLW       0
 	MOVWF       _prevrc1+1 
-;main.c,211 :: 		UART_Write('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
+;main.c,224 :: 		INTCON.RBIE=0; // Desactive les interruptions sur PORTB
+	BCF         INTCON+0, 3 
+;main.c,225 :: 		flagProcess = 0;    // Met a jour le flag de sortie de boucle
+	CLRF        _flagProcess+0 
+	CLRF        _flagProcess+1 
+;main.c,226 :: 		UART_Write('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
 	MOVLW       105
 	MOVWF       FARG_UART_Write__data+0 
 	CALL        _UART_Write+0, 0
-;main.c,212 :: 		UART_Write(0x0D);
+;main.c,227 :: 		UART_Write(0x0D); // Saut de ligne
 	MOVLW       13
 	MOVWF       FARG_UART_Write__data+0 
 	CALL        _UART_Write+0, 0
-;main.c,213 :: 		UART_Write(0x0A);
+;main.c,228 :: 		UART_Write(0x0A);
 	MOVLW       10
 	MOVWF       FARG_UART_Write__data+0 
 	CALL        _UART_Write+0, 0
-;main.c,214 :: 		}
-L_main80:
-;main.c,215 :: 		}
-	GOTO        L_main78
-L_main79:
-;main.c,216 :: 		}
-	GOTO        L_main66
-L_main67:
-;main.c,220 :: 		while(PORTC.B1==1){
-L_main81:
+;main.c,229 :: 		}
+L_main85:
+;main.c,230 :: 		}
+	GOTO        L_main83
+L_main84:
+;main.c,231 :: 		}
+	GOTO        L_main71
+L_main72:
+;main.c,235 :: 		while(PORTC.B1==1){
+L_main86:
 	BTFSS       PORTC+0, 1 
-	GOTO        L_main82
-;main.c,221 :: 		if(prevrc1==1){
+	GOTO        L_main87
+;main.c,236 :: 		if(prevrc1==1){
 	MOVLW       0
 	XORWF       _prevrc1+1, 0 
 	BTFSS       STATUS+0, 2 
-	GOTO        L__main125
+	GOTO        L__main134
 	MOVLW       1
 	XORWF       _prevrc1+0, 0 
-L__main125:
+L__main134:
 	BTFSS       STATUS+0, 2 
-	GOTO        L_main83
-;main.c,222 :: 		UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
+	GOTO        L_main88
+;main.c,237 :: 		UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
 	MOVLW       109
 	MOVWF       FARG_UART_Write__data+0 
 	CALL        _UART_Write+0, 0
-;main.c,223 :: 		UART_Write(0x0D);
+;main.c,238 :: 		UART_Write(0x0D); // Saut de ligne
 	MOVLW       13
 	MOVWF       FARG_UART_Write__data+0 
 	CALL        _UART_Write+0, 0
-;main.c,224 :: 		UART_Write(0x0A);
+;main.c,239 :: 		UART_Write(0x0A);
 	MOVLW       10
 	MOVWF       FARG_UART_Write__data+0 
 	CALL        _UART_Write+0, 0
-;main.c,225 :: 		cpt=0;           // On initialise le compteur
+;main.c,240 :: 		cpt=0;           // On initialise le compteur
 	CLRF        _cpt+0 
 	CLRF        _cpt+1 
-;main.c,226 :: 		init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
+;main.c,241 :: 		init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
 	CALL        _init_cpt_data+0, 0
-;main.c,227 :: 		flagProcess = 1;    // Met a jour le flag de sortie de boucle
+;main.c,242 :: 		flagProcess = 1;    // Met a jour le flag de sortie de boucle
 	MOVLW       1
 	MOVWF       _flagProcess+0 
 	MOVLW       0
 	MOVWF       _flagProcess+1 
-;main.c,228 :: 		prevrc1=0;          // Sauvegarde du dernier etat de RC1
+;main.c,243 :: 		INTCON.RBIE=1; // Active les interruptions sur PORTB en dernier
+	BSF         INTCON+0, 3 
+;main.c,244 :: 		prevrc1=0;          // Sauvegarde du dernier etat de RC1
 	CLRF        _prevrc1+0 
 	CLRF        _prevrc1+1 
-;main.c,229 :: 		INTCON.RBIE=1; // Active les interruptions sur PORTB en dernier
-	BSF         INTCON+0, 3 
-;main.c,230 :: 		}
-L_main83:
-;main.c,231 :: 		}
-	GOTO        L_main81
-L_main82:
-;main.c,232 :: 		}
-	GOTO        L_main59
-L_main60:
-;main.c,233 :: 		}
+;main.c,245 :: 		}
+L_main88:
+;main.c,246 :: 		}
+	GOTO        L_main86
+L_main87:
+;main.c,247 :: 		}
+	GOTO        L_main64
+L_main65:
+;main.c,248 :: 		}
 L_end_main:
 	GOTO        $+0
 ; end of _main

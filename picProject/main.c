@@ -24,6 +24,7 @@
 #include "lib/7seg_functions.h"
 #include "lib/counting_functions.h"
 #include "lib/init_functions.h"
+#include "lib/command_manager.h"
 
 // Guide //
 
@@ -54,7 +55,7 @@ void interrupt(void) {
     // Active ou desactive le comptage lors de l'arrivee d'une impulsion sur RB7
     // Procede egalement a la sauvegarde et l'envoie des donnees par UART
     // Cette fonction d'interruption doit rester reservee a RB7, aucune autre pin ne doit etre utilisee
-
+    
     if(PIR1.RCIF==1){ // Reception de données pour controler le PIC
         char received_data = RCREG; // Lire les données reçues
         PIR1.RCIF = 0; // Réinitialiser le drapeau d'interruption de réception
@@ -71,9 +72,21 @@ void interrupt(void) {
                     break;
                 case 'g':  // Commande GO pour lancer les mesures
                     flagProcess = 1;
+                    UART_send_data('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
+                    UART_send_data(0x0D); // Saut de ligne
+                    UART_send_data(0x0A);
+                    cpt=0;           // On initialise le compteur
+                    init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
+                    flagProcess = 1;    // Met a jour le flag de sortie de boucle
+                    INTCON.RBIE=1; // Active les interruptions sur PORTB en dernier
                     break;
                 case 's':  // Commande STOP pour arreter les mesures
                     flagProcess = 0;
+                    INTCON.RBIE=0; // Desactive les interruptions sur PORTB
+                    flagProcess = 0;    // Met a jour le flag de sortie de boucle
+                    UART_send_data('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
+                    UART_send_data(0x0D); // Saut de ligne
+                    UART_send_data(0x0A);
                     break;
                 case 'e':  // Commande ERLANG pour selectionner le mode de mesure Erlang
                     mode = 1;
@@ -81,6 +94,8 @@ void interrupt(void) {
                 case 'p':  // Commande POISSON pour selectionner le mode de mesure Poisson
                     mode = 0;
                     break;
+                case '?': // Commande pour envoyer l'etat actuel du PIC18F4550
+                    send_state(flagProcess);
                 default:
                     // Aucune correspondance, on ignore la/les données reçues
                     break;
@@ -188,7 +203,7 @@ void main() {
                       while(PORTC.B0); // On attend que le niveau haut d'horloge se termine
                       }
 
-                      if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
+                      if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
                           INTCON &= 0b00110111; // Desactive toutes les interruptions pour l'ecriture
                           flagWrite = 1; // On active le flag d'ecriture des donnees
                           }
@@ -205,12 +220,12 @@ void main() {
 
                 while(PORTC.B1==1){ // Met en pause les mesures lors de l'appui sur le bouton RC1
                         if(prevrc1==0){
-                        INTCON.RBIE=0; // Desactive les interruptions sur PORTB
-                        flagProcess = 0;    // Met a jour le flag de sortie de boucle
-                        prevrc1=1;          // Sauvegarde du dernier etat de RC1
-                        UART_Write('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
-                        UART_Write(0x0D);
-                        UART_Write(0x0A);
+                            prevrc1=1;          // Sauvegarde du dernier etat de RC1
+                            INTCON.RBIE=0; // Desactive les interruptions sur PORTB
+                            flagProcess = 0;    // Met a jour le flag de sortie de boucle
+                            UART_Write('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
+                            UART_Write(0x0D); // Saut de ligne
+                            UART_Write(0x0A);
                         }
                     }
                 }
@@ -219,14 +234,14 @@ void main() {
             // Met en route les mesures lors de l'appui sur le bouton RC1 //
             while(PORTC.B1==1){
                 if(prevrc1==1){
-                    UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
-                    UART_Write(0x0D);
-                    UART_Write(0x0A);
-                    cpt=0;           // On initialise le compteur
-                    init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
-                    flagProcess = 1;    // Met a jour le flag de sortie de boucle
-                    prevrc1=0;          // Sauvegarde du dernier etat de RC1
-                    INTCON.RBIE=1; // Active les interruptions sur PORTB en dernier
+                        UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
+                        UART_Write(0x0D); // Saut de ligne
+                        UART_Write(0x0A);
+                        cpt=0;           // On initialise le compteur
+                        init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
+                        flagProcess = 1;    // Met a jour le flag de sortie de boucle
+                        INTCON.RBIE=1; // Active les interruptions sur PORTB en dernier
+                        prevrc1=0;          // Sauvegarde du dernier etat de RC1
                     }
                 }
         }

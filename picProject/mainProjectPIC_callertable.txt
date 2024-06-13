@@ -19,4 +19,8 @@ main
 	UART_Write
 		____DoIFC
 interrupt
+	UART_send_data
+	init_cpt_data
+	send_state
+		UART_send_data
 	Counting

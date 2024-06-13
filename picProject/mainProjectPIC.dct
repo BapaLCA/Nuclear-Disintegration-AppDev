@@ -1087,6 +1087,7 @@ se0_bit
 sen
 sen_bit
 send_data
+send_state
 sendb
 sendb_bit
 setfdz32
@@ -1169,6 +1170,7 @@ stallie
 stallie_bit
 stallif
 stallif_bit
+start_measures
 status
 stkful
 stkful_bit
@@ -1187,6 +1189,7 @@ stkptr4
 stkptr4_bit
 stkunf
 stkunf_bit
+stop_measures
 str
 str_cut_chr
 str_cut_left
@@ -1461,6 +1464,7 @@ uart_read
 uart_read_char
 uart_read_text
 uart_send_char
+uart_send_data
 uart_send_int
 uart_send_long_int
 uart_send_string
