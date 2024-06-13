@@ -173,11 +173,13 @@ void send_data() {
  UART_Write(0x0D);
  UART_Write(0x0A);
  for(i=0;i<MAX;i++) {
+ if(cpt_data[i]!=0){
  UART_send_long_int(i);
  UART_Write(';');
  UART_send_int(cpt_data[i]);
  UART_Write(0x0D);
  UART_Write(0x0A);
+ }
  }
  UART_Write('m');
  UART_Write(0x0D);
