@@ -1,13 +1,16 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import OptionMenu, StringVar, Label
+from tkinter import OptionMenu, StringVar, Label, Button, Entry
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
+from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_fit
+from modules.fileManaging import open_file
+from tkinter import messagebox
 
 def createGraph(x_coord, y_coord, canvas, root):
 # Crée une figure matplotlib vide
-    fig, ax = plt.subplots(figsize=(6, 5))
+    fig, ax = plt.subplots(figsize=(6, 4))
     ax.set_title('Graphic Displayer')  # Titre
     ax.set_xlabel('Time (in µs)')  # Abscisse
     ax.set_ylabel('Iteration')  # Ordonnée
@@ -25,6 +28,80 @@ def createGraph(x_coord, y_coord, canvas, root):
 
 
 
+class controlGRAPH(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.data = None
+        self.user_input = None
+
+        self.create_widgets()
+
+    def create_widgets(self):
+        # Conteneur pour le graphique
+        self.graph_frame = tk.Frame(self)
+        self.graph_frame.grid(row=0, column=0, sticky="nsew")
+
+        self.fig, self.ax = plt.subplots(figsize=(7, 6))
+        self.ax.set_title('Graphic Displayer')  # Titre
+        self.ax.set_xlabel('Time (in µs)')  # Abscisse
+        self.ax.set_ylabel('Iteration')  # Ordonnée
+        self.ax.grid(True)  # Affichage d'une grille
+
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
+        self.canvas.get_tk_widget().pack(expand=True, fill=tk.BOTH)
+
+        # Frame pour les widgets de contrôle
+        self.control_frame = tk.Frame(self)
+        self.control_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
+
+        # Bouton pour charger un fichier CSV
+        self.b1 = Button(self.control_frame, text="Load CSV", command=self.load_file)
+        self.b1.grid(row=0, column=0, padx=5, pady=5)
+
+        # Label pour le choix de fréquence
+        self.labelfreq = Label(self.control_frame, text="Enter frequency value:")
+        self.labelfreq.grid(row=0, column=1, padx=5, pady=5)
+
+        # Zone de texte (Entry)
+        self.entry = Entry(self.control_frame, width=20)
+        self.entry.grid(row=0, column=2, padx=5, pady=5)
+        self.entry.insert(0, "0")
+
+        # Bouton pour récupérer la valeur saisie
+        self.button_confirm = Button(self.control_frame, text="Confirm", command=self.show_entry_value)
+        self.button_confirm.grid(row=0, column=3, padx=5, pady=5)
+
+        # Bouton pour tracer l'Exponentielle
+        self.button_exp = Button(self.control_frame, text="Add Erlang Fit", command=lambda: add_erlang_fit(self.data, self.canvas, self.ax, self.user_input))
+        self.button_exp.grid(row=1, column=0, padx=5, pady=5)
+
+        # Bouton pour tracer la Gaussienne
+        self.button_gaussian = Button(self.control_frame, text="Add Gaussian Fit", command=lambda: add_gaussian_fit(self.data, self.canvas, self.ax, self.user_input))
+        self.button_gaussian.grid(row=1, column=1, padx=5, pady=5)
+
+        # Bouton pour tracer Poisson
+        self.button_poisson = Button(self.control_frame, text="Add Poisson Fit", command=lambda: add_poisson_fit(self.data, self.canvas, self.ax, self.user_input))
+        self.button_poisson.grid(row=1, column=2, padx=5, pady=5)
+
+    def load_file(self):
+        self.data = open_file(self.canvas, self.ax, self.user_input)
+        if self.data is not None:
+            print("Data loaded successfully")
+        else:
+            print("No data loaded")
+
+    def show_entry_value(self):
+        self.user_input = self.entry.get()
+        print(f"Frequency value entered: {self.user_input}")
+
+
+
+
+
+
+
+
+
 class controlPIC(tk.Frame):
     def __init__(self, parent, uart_terminal):
         super().__init__(parent)
@@ -35,23 +112,20 @@ class controlPIC(tk.Frame):
         self.update_buttons_state()
 
         # Ajouter des labels au conteneur
-        self.label1 = ttk.Label(self, text="Label 1")
+        self.label1 = ttk.Label(self, text="Function Mode")
         self.label1.grid(row=0, column=0, padx=5, pady=5)
         
-        self.label2 = ttk.Label(self, text="Label 2")
-        self.label2.grid(row=0, column=1, padx=5, pady=5)
-        
-        
-
+        self.label2 = ttk.Label(self, text="K factor")
+        self.label2.grid(row=1, column=0, padx=5, pady=5)
 
     def create_widgets(self):
         # Ajouter des boutons au conteneur
         startMeasures = ttk.Button(self, text="Start", command=self.on_startMeasures_click)
-        startMeasures.grid(row=1, column=0, padx=5, pady=5)
+        startMeasures.grid(row=2, column=0, padx=5, pady=5)
         self.buttons.append(startMeasures)
         
         stopMeasures = ttk.Button(self, text="Stop", command=self.on_stopMeasures_click)
-        stopMeasures.grid(row=1, column=1, padx=5, pady=5)
+        stopMeasures.grid(row=2, column=1, padx=5, pady=5)
         self.buttons.append(stopMeasures)
 
         # Selection du Mode de mesure
@@ -59,7 +133,7 @@ class controlPIC(tk.Frame):
         self.mode_var.set("Erlang")
         self.mode_options = ["Erlang", "Poisson"]
         self.mode_menu = OptionMenu(self, self.mode_var, *self.mode_options)
-        self.mode_menu.grid(row=0, column=2, padx=5, pady=5)
+        self.mode_menu.grid(row=0, column=1, padx=5, pady=5)
         self.mode_var.trace_add("write", self.on_mode_select)
 
         # Création du menu déroulant pour le facteur
@@ -67,7 +141,7 @@ class controlPIC(tk.Frame):
         self.factor_var.set("1")
         self.factor_options = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         self.factor_menu = OptionMenu(self, self.factor_var, *self.factor_options)
-        self.factor_menu.grid(row=1, column=2, padx=5, pady=5)
+        self.factor_menu.grid(row=1, column=1, padx=5, pady=5)
         self.factor_var.trace_add("write", self.on_factor_select)    
 
 

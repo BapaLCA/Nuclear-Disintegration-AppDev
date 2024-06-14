@@ -8,6 +8,9 @@ class UARTTerminal(tk.Frame):
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         
+        # Label pour le titre du terminal
+        self.labelUART = tk.Label(self, text="UART Terminal", font=("Arial", 16, "bold"), fg="blue", relief="raised")
+        self.labelUART.pack(side=tk.TOP)
         # ScrolledText widget pour afficher les données UART
         self.text_area = scrolledtext.ScrolledText(self, wrap=tk.WORD, font=("Arial", 12))
         self.text_area.pack(expand=True, fill='both')
@@ -44,8 +47,14 @@ class UARTTerminal(tk.Frame):
         self.status_label = Label(self.status_frame, text="Status : Unknown", font=("Arial", 10), width=15, anchor='w')
         self.status_label.pack(side=tk.BOTTOM)
 
+        # Variable déterminant le status du PIC
+        self.status = "?"
+
         # Port série
         self.serial_port = None # Valeur par défaut
+
+        # Tableau pour stocker les données reçues
+        self.received_data = [0] * 1024
 
     def get_available_ports(self):
         ports = [port.device for port in list_ports.comports()]
@@ -67,19 +76,41 @@ class UARTTerminal(tk.Frame):
                 data = self.serial_port.readline().decode('utf-8').strip()
                 self.update_text_area(data)
                 self.check_status(data)
+                self.save_data(data)
 
     def check_status(self, data):
         # Vérifiez les valeurs spécifiques et mettez à jour le label
         if data == "w":
             self.status_label.config(text="Status : Writing")
+            self.status = "w"
         elif data == "m":
             self.status_label.config(text="Status : Measuring")
+            self.status = "m"
         elif data == "i":
             self.status_label.config(text="Status : Idle")
+            self.status = "i"
+
+    def get_status(self):
+        return self.status
 
     def update_text_area(self, data):
         self.text_area.insert(tk.END, data + '\n')
         self.text_area.yview(tk.END)
+
+    def save_data(self, data):
+        try:
+            parts = data.split(';') # On détermine le séparateur
+            if len(parts) == 2: # On indique qu'il y a deux valeurs à lire par ligne
+                index = int(parts[0]) # La première valeur correspond au numéro de la cellule du tableau
+                value = int(parts[1]) # La seconde valeur correspond à la valeur de cette cellule
+                if 0 <= index < 1024: # Si le numero de cellule depasse 1024, on ignore la ligne
+                    self.received_data[index] = value
+        except ValueError:
+            # Si le format est incorrect, on ignore la ligne
+            pass
+
+    def get_received_data(self): # Fonction pour récupérer les données du tableau
+        return self.received_data
 
 
     def send_data_entry(self):
