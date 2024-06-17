@@ -312,10 +312,10 @@ void interrupt(void) {
  UART_send_data(0x0A);
  break;
  case 'e':
- mode = 1;
+ mode = 0;
  break;
  case 'p':
- mode = 0;
+ mode = 1;
  break;
  case '?':
  send_state(flagProcess);

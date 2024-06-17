@@ -1141,18 +1141,18 @@ L_interrupt50:
 	GOTO        L_interrupt47
 ;main.c,91 :: 		case 'e':  // Commande ERLANG pour selectionner le mode de mesure Erlang
 L_interrupt51:
-;main.c,92 :: 		mode = 1;
-	MOVLW       1
-	MOVWF       _mode+0 
-	MOVLW       0
-	MOVWF       _mode+1 
+;main.c,92 :: 		mode = 0;
+	CLRF        _mode+0 
+	CLRF        _mode+1 
 ;main.c,93 :: 		break;
 	GOTO        L_interrupt47
 ;main.c,94 :: 		case 'p':  // Commande POISSON pour selectionner le mode de mesure Poisson
 L_interrupt52:
-;main.c,95 :: 		mode = 0;
-	CLRF        _mode+0 
-	CLRF        _mode+1 
+;main.c,95 :: 		mode = 1;
+	MOVLW       1
+	MOVWF       _mode+0 
+	MOVLW       0
+	MOVWF       _mode+1 
 ;main.c,96 :: 		break;
 	GOTO        L_interrupt47
 ;main.c,97 :: 		case '?': // Commande pour envoyer l'etat actuel du PIC18F4550

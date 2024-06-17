@@ -1,12 +1,12 @@
 import tkinter as tk
-from tkinter import ttk
-from tkinter import OptionMenu, StringVar, Label, Button, Entry
+from tkinter import ttk, OptionMenu, StringVar, Label, Button, Entry, messagebox
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
 from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_fit
-from modules.fileManaging import open_file
-from tkinter import messagebox
+from modules.fileManaging import open_file, plot_data
+import numpy as np
+import time
 
 def createGraph(x_coord, y_coord, canvas, root):
 # Crée une figure matplotlib vide
@@ -26,10 +26,32 @@ def createGraph(x_coord, y_coord, canvas, root):
 
     return fig, ax
 
+class controller(tk.Frame):
+    def __init__(self, parent, bottom_right_frame, uart_terminal):
+        super().__init__(parent)
+
+        # Ajout du graphique et des contrôles
+        graph_control = controlGRAPH(parent, uart_terminal)
+        graph_control.pack(expand=True, fill=tk.BOTH)
+
+        # Ajout du conteneur de contrôle du PIC
+        pic_control = controlPIC(parent, uart_terminal)
+        pic_control.pack(expand=True, fill=tk.BOTH)
+
+        # Bouton de connexion
+        connect_button = Button(bottom_right_frame, text="Connecter", command=lambda:self.on_connect(uart_terminal, pic_control))
+        connect_button.pack(expand=True, fill=tk.BOTH)
+
+    def on_connect(self, uart_terminal, pic_control):
+        uart_terminal.connect() # On se connecte au port série
+        pic_control.update_buttons_state() # Si le terminal est bien connecté, on rend utilisable les boutons de contrôle
+        uart_terminal.send_data('?') # On demande l'état actuel du PIC (Le premier char est toujours ignoré, je ne sais pas pourquoi)
+        uart_terminal.send_data('?')
+
 
 
 class controlGRAPH(tk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, uart_terminal):
         super().__init__(parent)
         self.data = None
         self.user_input = None
@@ -41,7 +63,7 @@ class controlGRAPH(tk.Frame):
         self.graph_frame = tk.Frame(self)
         self.graph_frame.grid(row=0, column=0, sticky="nsew")
 
-        self.fig, self.ax = plt.subplots(figsize=(7, 6))
+        self.fig, self.ax = plt.subplots(figsize=(7, 5))
         self.ax.set_title('Graphic Displayer')  # Titre
         self.ax.set_xlabel('Time (in µs)')  # Abscisse
         self.ax.set_ylabel('Iteration')  # Ordonnée
@@ -90,6 +112,13 @@ class controlGRAPH(tk.Frame):
         else:
             print("No data loaded")
 
+    def plot_uart_data(self, uart_terminal):
+        self.data = np.add(self.data, uart_terminal.get_received_data())
+        if self.data is not None:
+            plot_data(self.data, self.canvas, self.ax, self.freq)
+        else:
+            print("Data is null")
+
     def show_entry_value(self):
         self.user_input = self.entry.get()
         print(f"Frequency value entered: {self.user_input}")
@@ -121,16 +150,16 @@ class controlPIC(tk.Frame):
     def create_widgets(self):
         # Ajouter des boutons au conteneur
         startMeasures = ttk.Button(self, text="Start", command=self.on_startMeasures_click)
-        startMeasures.grid(row=2, column=0, padx=5, pady=5)
+        startMeasures.grid(row=0, column=2, padx=5, pady=5)
         self.buttons.append(startMeasures)
         
         stopMeasures = ttk.Button(self, text="Stop", command=self.on_stopMeasures_click)
-        stopMeasures.grid(row=2, column=1, padx=5, pady=5)
+        stopMeasures.grid(row=1, column=2, padx=5, pady=5)
         self.buttons.append(stopMeasures)
 
         # Selection du Mode de mesure
         self.mode_var = StringVar(self)
-        self.mode_var.set("Erlang")
+        self.mode_var.set("-")
         self.mode_options = ["Erlang", "Poisson"]
         self.mode_menu = OptionMenu(self, self.mode_var, *self.mode_options)
         self.mode_menu.grid(row=0, column=1, padx=5, pady=5)
@@ -138,7 +167,7 @@ class controlPIC(tk.Frame):
 
         # Création du menu déroulant pour le facteur
         self.factor_var = StringVar(self)
-        self.factor_var.set("1")
+        self.factor_var.set("-")
         self.factor_options = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         self.factor_menu = OptionMenu(self, self.factor_var, *self.factor_options)
         self.factor_menu.grid(row=1, column=1, padx=5, pady=5)
@@ -147,14 +176,27 @@ class controlPIC(tk.Frame):
 
     # Commande de lancement des mesures
     def on_startMeasures_click(self):
-        if self.uart_terminal is not None:
-            self.send_character('g')
+        if self.uart_terminal is not None:  # On vérifie que le terminal existe bien
+            mode = self.mode_var.get()
+            factor = self.factor_var.get()
+
+            if mode == "Erlang":  # On vérifie que les paramètres sont biens configurés avant lancement
+                if "1" <= factor <= "9":
+                    self.send_character('g')
+                else:
+                    messagebox.showinfo("Factor k must be set!")
+            elif mode == "Poisson":
+                self.send_character('g')
+            else:
+                messagebox.showinfo("Mode must be set!")
         else:
-            print("UART Terminal is not initialized!")
+            messagebox.showinfo("UART Terminal is not initialized!")
     
     # Commande d'arret des mesures
-    def on_stopMeasures_click(self):
+    def on_stopMeasures_click(self, uart_terminal):
         if self.uart_terminal is not None:
+            while uart_terminal.get_status == "w": # On attend la fin de la transmission de données avant l'arrêt
+                time.sleep(1)
             self.send_character('s')
         else:
             print("UART Terminal is not initialized!")

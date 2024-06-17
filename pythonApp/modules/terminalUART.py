@@ -13,7 +13,7 @@ class UARTTerminal(tk.Frame):
         self.labelUART.pack(side=tk.TOP)
         # ScrolledText widget pour afficher les données UART
         self.text_area = scrolledtext.ScrolledText(self, wrap=tk.WORD, font=("Arial", 12))
-        self.text_area.pack(expand=True, fill='both')
+        self.text_area.pack(expand=True, fill=tk.BOTH)
 
         # Entry et bouton pour saisir et envoyer des données
         self.entry = Entry(self, font=("Arial", 12))
@@ -77,6 +77,7 @@ class UARTTerminal(tk.Frame):
                 self.update_text_area(data)
                 self.check_status(data)
                 self.save_data(data)
+                print(self.received_data)
 
     def check_status(self, data):
         # Vérifiez les valeurs spécifiques et mettez à jour le label

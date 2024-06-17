@@ -89,10 +89,10 @@ void interrupt(void) {
                     UART_send_data(0x0A);
                     break;
                 case 'e':  // Commande ERLANG pour selectionner le mode de mesure Erlang
-                    mode = 1;
+                    mode = 0;
                     break;
                 case 'p':  // Commande POISSON pour selectionner le mode de mesure Poisson
-                    mode = 0;
+                    mode = 1;
                     break;
                 case '?': // Commande pour envoyer l'etat actuel du PIC18F4550
                     send_state(flagProcess);
