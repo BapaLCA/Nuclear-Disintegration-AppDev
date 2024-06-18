@@ -5,9 +5,10 @@ import threading
 from serial.tools import list_ports
 
 class UARTTerminal(tk.Frame):
-    def __init__(self, master, *args, **kwargs):
+    def __init__(self, master, data_callback, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
-        
+        self.data_callback = data_callback  # Callback to notify the controller
+
         # Label pour le titre du terminal
         self.labelUART = tk.Label(self, text="UART Terminal", font=("Arial", 16, "bold"), fg="blue", relief="raised")
         self.labelUART.pack(side=tk.TOP)
@@ -77,7 +78,7 @@ class UARTTerminal(tk.Frame):
                 self.update_text_area(data)
                 self.check_status(data)
                 self.save_data(data)
-                print(self.received_data)
+                #self.data_callback(self.received_data)  # Notify the controller
 
     def check_status(self, data):
         # Vérifiez les valeurs spécifiques et mettez à jour le label
@@ -90,6 +91,11 @@ class UARTTerminal(tk.Frame):
         elif data == "i":
             self.status_label.config(text="Status : Idle")
             self.status = "i"
+        elif data == "d":
+            self.data_callback(self.received_data)  # Notify the controller
+            self.status_label.config(text="Status : Done Writing")
+            print("Done Writing recognized")
+            self.status = "d"
 
     def get_status(self):
         return self.status

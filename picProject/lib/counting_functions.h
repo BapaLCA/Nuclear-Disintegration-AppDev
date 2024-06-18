@@ -39,6 +39,9 @@ void send_data() {
             UART_Write(0x0A);
             }
         }
+    UART_Write('d'); // On envoie une commande indiquant l'etat "Done Writing Data" a l'app
+    UART_Write(0x0D);
+    UART_Write(0x0A);
     UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
     UART_Write(0x0D);
     UART_Write(0x0A);

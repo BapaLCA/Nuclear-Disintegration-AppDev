@@ -31,16 +31,19 @@ class controller(tk.Frame):
         super().__init__(parent)
 
         # Ajout du graphique et des contrôles
-        graph_control = controlGRAPH(parent, uart_terminal)
-        graph_control.pack(expand=True, fill=tk.BOTH)
+        self.graph_control = controlGRAPH(self, uart_terminal)
+        self.graph_control.pack(expand=True, fill=tk.BOTH)
 
         # Ajout du conteneur de contrôle du PIC
-        pic_control = controlPIC(parent, uart_terminal)
+        pic_control = controlPIC(self, uart_terminal)
         pic_control.pack(expand=True, fill=tk.BOTH)
 
         # Bouton de connexion
         connect_button = Button(bottom_right_frame, text="Connecter", command=lambda:self.on_connect(uart_terminal, pic_control))
         connect_button.pack(expand=True, fill=tk.BOTH)
+
+        #self.uart_terminal.data_callback = self.on_data_received
+        #self.plot_uart_data(uart_terminal.received_data)
 
     def on_connect(self, uart_terminal, pic_control):
         uart_terminal.connect() # On se connecte au port série
@@ -48,15 +51,19 @@ class controller(tk.Frame):
         uart_terminal.send_data('?') # On demande l'état actuel du PIC (Le premier char est toujours ignoré, je ne sais pas pourquoi)
         uart_terminal.send_data('?')
 
+    def plot_uart_data(self, data):
+        self.graph_control.plot_uart_data(data)
+
 
 
 class controlGRAPH(tk.Frame):
     def __init__(self, parent, uart_terminal):
         super().__init__(parent)
-        self.data = None
-        self.user_input = None
+        self.data = [0]*1024
+        self.user_input = 0
 
         self.create_widgets()
+        self.plot_uart_data(uart_terminal.received_data)
 
     def create_widgets(self):
         # Conteneur pour le graphique
@@ -112,10 +119,14 @@ class controlGRAPH(tk.Frame):
         else:
             print("No data loaded")
 
-    def plot_uart_data(self, uart_terminal):
-        self.data = np.add(self.data, uart_terminal.get_received_data())
+    def plot_uart_data(self, uart_data):
+        print("Plot called")
+        self.data = np.add(self.data, uart_data)
         if self.data is not None:
-            plot_data(self.data, self.canvas, self.ax, self.freq)
+            #plot_data(self.data, self.canvas, self.ax, self.user_input)
+            self.ax.clear()
+            self.ax.plot(self.data)
+            self.canvas.draw()
         else:
             print("Data is null")
 
@@ -153,7 +164,7 @@ class controlPIC(tk.Frame):
         startMeasures.grid(row=0, column=2, padx=5, pady=5)
         self.buttons.append(startMeasures)
         
-        stopMeasures = ttk.Button(self, text="Stop", command=self.on_stopMeasures_click)
+        stopMeasures = ttk.Button(self, text="Stop", command=lambda:self.on_stopMeasures_click(self.uart_terminal))
         stopMeasures.grid(row=1, column=2, padx=5, pady=5)
         self.buttons.append(stopMeasures)
 

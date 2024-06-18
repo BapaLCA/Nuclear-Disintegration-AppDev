@@ -181,6 +181,9 @@ void send_data() {
  UART_Write(0x0A);
  }
  }
+ UART_Write('d');
+ UART_Write(0x0D);
+ UART_Write(0x0A);
  UART_Write('m');
  UART_Write(0x0D);
  UART_Write(0x0A);
@@ -294,7 +297,6 @@ void interrupt(void) {
  received_k_factor = 1;
  break;
  case 'g':
- flagProcess = 1;
  UART_send_data('m');
  UART_send_data(0x0D);
  UART_send_data(0x0A);

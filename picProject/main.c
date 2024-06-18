@@ -71,7 +71,6 @@ void interrupt(void) {
                     received_k_factor = 1; // On informe le PIC que le prochain caractere sera le facteur k
                     break;
                 case 'g':  // Commande GO pour lancer les mesures
-                    flagProcess = 1;
                     UART_send_data('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
                     UART_send_data(0x0D); // Saut de ligne
                     UART_send_data(0x0A);
