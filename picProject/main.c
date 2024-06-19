@@ -95,6 +95,8 @@ void interrupt(void) {
                     break;
                 case '?': // Commande pour envoyer l'etat actuel du PIC18F4550
                     send_state(flagProcess);
+                    UART_send_data(0x0D); // Saut de ligne
+                    UART_send_data(0x0A);
                 default:
                     // Aucune correspondance, on ignore la/les données reçues
                     break;

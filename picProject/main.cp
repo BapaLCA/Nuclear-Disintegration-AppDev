@@ -321,6 +321,8 @@ void interrupt(void) {
  break;
  case '?':
  send_state(flagProcess);
+ UART_send_data(0x0D);
+ UART_send_data(0x0A);
  default:
 
  break;
