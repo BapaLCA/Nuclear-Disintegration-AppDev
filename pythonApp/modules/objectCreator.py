@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
 from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_fit
-from modules.fileManaging import open_file, plot_data
 import numpy as np
 import time
 import csv
@@ -88,7 +87,7 @@ class controlGRAPH(tk.Frame):
         self.factor_k = 1 #Valeur par défaut
 
         # Bouton pour charger un fichier CSV
-        self.b1 = Button(self.control_frame, text="Load CSV", command=self.load_file)
+        self.b1 = Button(self.control_frame, text="Load CSV", command=self.open_file)
         self.b1.grid(row=0, column=0, padx=5, pady=5)
 
         # Label pour le choix de fréquence
@@ -134,16 +133,33 @@ class controlGRAPH(tk.Frame):
 
     def update_plot(self):
         if self.data is not None:
-            self.ax.clear()
-            self.ax.plot(self.data, label='Données Principales')
-            if self.fit_erlang.get():
-                self.add_erlang_fit(self.ax, self.data, self.factor_k)
-            if self.fit_gaussian.get():
-                self.add_gaussian_fit(self.ax, self.data)
-            if self.fit_poisson.get():
-                self.add_poisson_fit(self.ax, self.data)
-            self.ax.legend()
-            self.canvas.draw()
+            # Filtrer les indices des valeurs non nulles
+            non_zero_indices = [i for i, value in enumerate(self.data) if value != 0]
+            
+            if non_zero_indices:
+                # Ajuster les limites de l'axe x pour zoomer sur les valeurs non nulles
+                min_index = min(non_zero_indices)
+                max_index = max(non_zero_indices)
+                
+                self.ax.clear()
+                self.ax.plot(self.data, label='Données Principales')
+                self.ax.set_title('Graphic Displayer')  # Titre
+                self.ax.set_xlabel('Channel')  # Abscisse
+                self.ax.set_ylabel('Iteration')  # Ordonnée
+                self.ax.grid(True)  # Affichage d'une grille
+                
+                if self.fit_erlang.get():
+                    self.add_erlang_fit(self.ax, self.data, self.factor_k)
+                if self.fit_gaussian.get():
+                    self.add_gaussian_fit(self.ax, self.data)
+                if self.fit_poisson.get():
+                    self.add_poisson_fit(self.ax, self.data)
+                
+                self.ax.set_xlim(min_index, max_index)
+                self.ax.legend()
+                self.canvas.draw()
+            else:
+                print("All data values are zero")
         else:
             print("Data is null")
 
@@ -160,12 +176,11 @@ class controlGRAPH(tk.Frame):
     def add_poisson_fit(self, ax, data):
         add_poisson_fit(ax, data)
 
-    def open_file(canvas, ax, freq):
+    def open_file(self):
         filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])  # Ouverture d'un explorateur de fichier pour sélectionner un fichier csv à lire
         if not filepath:
             return  # Termine la fonction ici si aucun fichier n'est sélectionné
-        global data  # Utilise la variable globale data
-        data.clear()  # Efface les anciennes données
+        self.data = [0] * len(self.data)  # Efface les anciennes données
         with open(filepath, 'r') as csvfile:  # Ouverture du fichier spécifié en tant que csv
             csvreader = csv.reader(csvfile, delimiter=';')  # Définition du séparateur de données
             for row in csvreader:  # Lecture des données
@@ -175,13 +190,12 @@ class controlGRAPH(tk.Frame):
                     if key > 1024:
                         print(f"Line {row} greater than limit has been ignored.")
                         continue  # Ignore la ligne si la valeur dépasse 1024
-                    data[key].append(value)  # Affectation des données dans le tableau data
+                    self.data[key] = value  # Affectation des données dans le tableau data
                 except (ValueError, IndexError) as e:
                     # Log the error and continue
                     print(f"Error processing line : {row}. IndexError: {e}")
                     continue
-        plot_data(data, canvas, ax, freq)  # Appel de la fonction d'affichage des données
-        return data # On récupère les données dans la fonction qui l'a appelée
+        self.plot_uart_data(0) # On met à jour l'affichage des données
 
 
 

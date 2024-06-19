@@ -31,7 +31,7 @@ def add_erlang_fit(ax, data, k_value):
         y_data = erlang_pdf(x_data, A_optimal, k_value, lambd_optimal)
         
         # Tracé des données expérimentales et de l'ajustement de la courbe d'Erlang
-        ax.plot(x_data, y_data, color='red', linewidth=2, label=f'Distribution d\'Erlang (k={k_value}, λ={lambd_optimal * 1000000:.2f}, A={A_optimal})')
+        ax.plot(x_data, y_data, color='red', linewidth=2, label=f'Erlang Fit (k={k_value}, λ={lambd_optimal:.2f}, A={round(A_optimal, 2)})')
     except RuntimeError as e:
         print(f"Erreur d'ajustement pour k={k_value}: {e}")
     except Exception as e:
@@ -54,7 +54,7 @@ def add_gaussian_fit(ax, data):
     x_fit = np.linspace(min(scaled_keys), min(1024, max(scaled_keys)), 1000)
     y_fit = gauss(x_fit, *popt)
     
-    ax.plot(x_fit, y_fit, color='green', label='Gaussienne ajustée')
+    ax.plot(x_fit, y_fit, color='green', label='Gaussian Fit')
 
 def add_poisson_fit(ax, data):
     scaled_keys = np.linspace(0, len(data), len(data)) #* 20  # 20 microsecondes par canal
@@ -64,4 +64,4 @@ def add_poisson_fit(ax, data):
     
     poisson_dist = poisson.pmf(np.arange(len(values)), mean) * sum(values)
     
-    ax.plot(scaled_keys, poisson_dist, color='yellow', label='Distribution de Poisson')
+    ax.plot(scaled_keys, poisson_dist, color='yellow', label='Poisson Fit')
