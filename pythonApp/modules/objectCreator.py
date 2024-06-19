@@ -7,6 +7,9 @@ from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_f
 from modules.fileManaging import open_file, plot_data
 import numpy as np
 import time
+import csv
+from collections import defaultdict
+from tkinter import filedialog
 
 def createGraph(x_coord, y_coord, canvas, root):
 # Crée une figure matplotlib vide
@@ -35,15 +38,12 @@ class controller(tk.Frame):
         self.graph_control.pack(expand=True, fill=tk.BOTH)
 
         # Ajout du conteneur de contrôle du PIC
-        pic_control = controlPIC(self, uart_terminal)
-        pic_control.pack(expand=True, fill=tk.BOTH)
+        self.pic_control = controlPIC(self, uart_terminal, self.graph_control)
+        self.pic_control.pack(expand=True, fill=tk.BOTH)
 
         # Bouton de connexion
-        connect_button = Button(bottom_right_frame, text="Connecter", command=lambda:self.on_connect(uart_terminal, pic_control))
+        connect_button = Button(bottom_right_frame, text="Connecter", command=lambda:self.on_connect(uart_terminal, self.pic_control))
         connect_button.pack(expand=True, fill=tk.BOTH)
-
-        #self.uart_terminal.data_callback = self.on_data_received
-        #self.plot_uart_data(uart_terminal.received_data)
 
     def on_connect(self, uart_terminal, pic_control):
         uart_terminal.connect() # On se connecte au port série
@@ -54,9 +54,6 @@ class controller(tk.Frame):
     def plot_uart_data(self, data):
         self.graph_control.plot_uart_data(data)
 
-    def plot_fit_function(self):
-        print("test")
-
 
 
 class controlGRAPH(tk.Frame):
@@ -64,6 +61,7 @@ class controlGRAPH(tk.Frame):
         super().__init__(parent)
         self.data = [0]*1024
         self.user_input = 0
+        self.factor_k = 1
 
         self.create_widgets()
         self.plot_uart_data(uart_terminal.received_data)
@@ -85,6 +83,9 @@ class controlGRAPH(tk.Frame):
         # Frame pour les widgets de contrôle
         self.control_frame = tk.Frame(self)
         self.control_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
+
+        # Facteur K pour le mode Erlang
+        self.factor_k = 1 #Valeur par défaut
 
         # Bouton pour charger un fichier CSV
         self.b1 = Button(self.control_frame, text="Load CSV", command=self.load_file)
@@ -128,12 +129,15 @@ class controlGRAPH(tk.Frame):
         self.data = np.add(self.data, uart_data)
         self.update_plot()
 
+    def set_factor_k(self, value):
+        self.factor_k = int(value)
+
     def update_plot(self):
         if self.data is not None:
             self.ax.clear()
             self.ax.plot(self.data, label='Données Principales')
             if self.fit_erlang.get():
-                self.add_erlang_fit(self.ax, self.data, 1)  # Utiliser une valeur de k fixe (2) ou ajustable
+                self.add_erlang_fit(self.ax, self.data, self.factor_k)
             if self.fit_gaussian.get():
                 self.add_gaussian_fit(self.ax, self.data)
             if self.fit_poisson.get():
@@ -156,6 +160,29 @@ class controlGRAPH(tk.Frame):
     def add_poisson_fit(self, ax, data):
         add_poisson_fit(ax, data)
 
+    def open_file(canvas, ax, freq):
+        filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])  # Ouverture d'un explorateur de fichier pour sélectionner un fichier csv à lire
+        if not filepath:
+            return  # Termine la fonction ici si aucun fichier n'est sélectionné
+        global data  # Utilise la variable globale data
+        data.clear()  # Efface les anciennes données
+        with open(filepath, 'r') as csvfile:  # Ouverture du fichier spécifié en tant que csv
+            csvreader = csv.reader(csvfile, delimiter=';')  # Définition du séparateur de données
+            for row in csvreader:  # Lecture des données
+                try:
+                    key = int(row[0])  # Lecture des canaux
+                    value = int(row[1])  # Lecture des valeurs relevées
+                    if key > 1024:
+                        print(f"Line {row} greater than limit has been ignored.")
+                        continue  # Ignore la ligne si la valeur dépasse 1024
+                    data[key].append(value)  # Affectation des données dans le tableau data
+                except (ValueError, IndexError) as e:
+                    # Log the error and continue
+                    print(f"Error processing line : {row}. IndexError: {e}")
+                    continue
+        plot_data(data, canvas, ax, freq)  # Appel de la fonction d'affichage des données
+        return data # On récupère les données dans la fonction qui l'a appelée
+
 
 
 
@@ -165,9 +192,10 @@ class controlGRAPH(tk.Frame):
 
 
 class controlPIC(tk.Frame):
-    def __init__(self, parent, uart_terminal):
+    def __init__(self, parent, uart_terminal, graph_control):
         super().__init__(parent)
         self.uart_terminal = uart_terminal
+        self.graph_control = graph_control
 
         self.buttons = []
         self.create_widgets()
@@ -240,6 +268,7 @@ class controlPIC(tk.Frame):
         if self.uart_terminal is not None:
             self.uart_terminal.send_data('k')
             self.uart_terminal.send_data(factor)
+            self.graph_control.set_factor_k(factor)
         else:
             print("UART Terminal is not initialized!")
 
