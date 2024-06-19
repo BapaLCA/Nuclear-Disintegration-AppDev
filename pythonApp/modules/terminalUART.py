@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import scrolledtext, Button, Entry, OptionMenu, StringVar, Label, Frame
+from tkinter import scrolledtext, Button, Entry, OptionMenu, StringVar, Label, Frame, messagebox
 import serial
 import threading
 from serial.tools import list_ports
@@ -94,7 +94,6 @@ class UARTTerminal(tk.Frame):
         elif data == "d":
             self.data_callback(self.received_data)  # Notify the controller
             self.status_label.config(text="Status : Done Writing")
-            print("Done Writing recognized")
             self.status = "d"
 
     def get_status(self):
@@ -130,7 +129,7 @@ class UARTTerminal(tk.Frame):
             self.serial_port.write(data.encode())
             self.entry.delete(0, tk.END)
         else:
-            print("Erreur: serial_port n'est pas initialisé.")
+            messagebox.showinfo("Terminal error", "Serial port is not initialized!")
 
     def close(self):
         if self.serial_port:

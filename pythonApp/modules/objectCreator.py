@@ -87,21 +87,21 @@ class controlGRAPH(tk.Frame):
         self.factor_k = 1 #Valeur par défaut
 
         # Bouton pour charger un fichier CSV
-        self.b1 = Button(self.control_frame, text="Load CSV", command=self.open_file)
-        self.b1.grid(row=0, column=0, padx=5, pady=5)
+        self.button_load_csv = Button(self.control_frame, text="Load Data from CSV", command=self.open_file)
+        self.button_load_csv.grid(row=0, column=0, padx=5, pady=5)
 
         # Label pour le choix de fréquence
         self.labelfreq = Label(self.control_frame, text="Enter frequency value:")
-        self.labelfreq.grid(row=0, column=1, padx=5, pady=5)
+        self.labelfreq.grid(row=0, column=2, padx=5, pady=5)
 
         # Zone de texte (Entry)
         self.entry = Entry(self.control_frame, width=20)
-        self.entry.grid(row=0, column=2, padx=5, pady=5)
+        self.entry.grid(row=0, column=3, padx=5, pady=5)
         self.entry.insert(0, "0")
 
         # Bouton pour récupérer la valeur saisie
-        self.button_confirm = Checkbutton(self.control_frame, text="Confirm", command=self.show_entry_value)
-        self.button_confirm.grid(row=0, column=3, padx=5, pady=5)
+        self.button_confirm = Button(self.control_frame, text="Confirm", command=self.show_entry_value)
+        self.button_confirm.grid(row=0, column=4, padx=5, pady=5)
 
         # Variable pour la checkbox
         self.fit_erlang = tk.BooleanVar()
@@ -116,12 +116,9 @@ class controlGRAPH(tk.Frame):
         self.button_poisson = Checkbutton(self.control_frame, text="Add Poisson Fit", variable=self.fit_poisson, command=self.update_plot)
         self.button_poisson.grid(row=1, column=2, padx=5, pady=5)
 
-    def load_file(self):
-        self.data = open_file(self.canvas, self.ax, self.user_input)
-        if self.data is not None:
-            print("Data loaded successfully")
-        else:
-            print("No data loaded")
+        # Bouton de sauvegarde des données en fichier .csv
+        self.button_save_data = Button(self.control_frame, text="Save Data to CSV", command=self.save_to_csv)
+        self.button_save_data.grid(row=0, column=1, padx=5, pady=5)
 
     def plot_uart_data(self, uart_data):
         print("Plot called")
@@ -142,7 +139,7 @@ class controlGRAPH(tk.Frame):
                 max_index = max(non_zero_indices)
                 
                 self.ax.clear()
-                self.ax.plot(self.data, label='Données Principales')
+                self.ax.plot(self.data, label='Measured Data')
                 self.ax.set_title('Graphic Displayer')  # Titre
                 self.ax.set_xlabel('Channel')  # Abscisse
                 self.ax.set_ylabel('Iteration')  # Ordonnée
@@ -165,7 +162,7 @@ class controlGRAPH(tk.Frame):
 
     def show_entry_value(self):
         self.user_input = self.entry.get()
-        print(f"Frequency value entered: {self.user_input}")
+        messagebox.showinfo("Value selected", f"Frequency value entered: {self.user_input}")
 
     def add_erlang_fit(self, ax, data, k_value):
         add_erlang_fit(ax, data, k_value)
@@ -196,6 +193,17 @@ class controlGRAPH(tk.Frame):
                     print(f"Error processing line : {row}. IndexError: {e}")
                     continue
         self.plot_uart_data(0) # On met à jour l'affichage des données
+
+    def save_to_csv(self):
+        # Ouvrir une boîte de dialogue pour choisir l'emplacement de sauvegarde
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
+        if file_path:
+            with open(file_path, mode='w', newline='') as file:
+                writer = csv.writer(file, delimiter=';')
+                # Écrire les données avec le format "numéro de cellule;valeur"
+                for i, value in enumerate(self.data):
+                    writer.writerow([i, value])
+            messagebox.showinfo("Success", f"Data has been saved to {file_path}")
 
 
 
@@ -259,13 +267,13 @@ class controlPIC(tk.Frame):
                 if "1" <= factor <= "9":
                     self.send_character('g')
                 else:
-                    messagebox.showinfo("Factor k must be set!")
+                    messagebox.showinfo("Configuration error", "Factor k must be set!")
             elif mode == "Poisson":
                 self.send_character('g')
             else:
-                messagebox.showinfo("Mode must be set!")
+                messagebox.showinfo("Configuration error", "Mode must be set!")
         else:
-            messagebox.showinfo("UART Terminal is not initialized!")
+            messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
     
     # Commande d'arret des mesures
     def on_stopMeasures_click(self, uart_terminal):
@@ -274,7 +282,7 @@ class controlPIC(tk.Frame):
                 time.sleep(1)
             self.send_character('s')
         else:
-            print("UART Terminal is not initialized!")
+            messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
     # Commande de selection du facteur k pour le mode de mesure Erlang
     def on_factor_select(self, *args):
@@ -284,7 +292,7 @@ class controlPIC(tk.Frame):
             self.uart_terminal.send_data(factor)
             self.graph_control.set_factor_k(factor)
         else:
-            print("UART Terminal is not initialized!")
+            messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
     def on_mode_select(self, *args):
         mode = self.mode_var.get()
@@ -294,13 +302,13 @@ class controlPIC(tk.Frame):
             elif mode == "Poisson":
                 self.uart_terminal.send_data('p')
         else:
-            print("UART Terminal is not initialized!")
+            messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
     def send_character(self, char):
         if self.uart_terminal and self.uart_terminal.serial_port:
             self.uart_terminal.send_data(char)
         else:
-            print("UART terminal is not connected.")
+            messagebox.showinfo("Terminal error", "UART Terminal is not connected!")
 
     def update_buttons_state(self):
         state = tk.NORMAL if self.uart_terminal and self.uart_terminal.serial_port else tk.DISABLED
