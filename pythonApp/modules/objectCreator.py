@@ -120,6 +120,10 @@ class controlGRAPH(tk.Frame):
         self.button_save_data = Button(self.control_frame, text="Save Data to CSV", command=self.save_to_csv)
         self.button_save_data.grid(row=0, column=1, padx=5, pady=5)
 
+        # Bouton pour supprimer toutes les données actuellement chargées
+        self.button_clear_data = Button(self.control_frame, text="Clear All Data", command=self.clear_data)
+        self.button_clear_data.grid(row=1, column=3, padx=5, pady=5)
+
     def plot_uart_data(self, uart_data):
         print("Plot called")
         self.data = np.add(self.data, uart_data)
@@ -174,25 +178,27 @@ class controlGRAPH(tk.Frame):
         add_poisson_fit(ax, data)
 
     def open_file(self):
-        filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])  # Ouverture d'un explorateur de fichier pour sélectionner un fichier csv à lire
-        if not filepath:
-            return  # Termine la fonction ici si aucun fichier n'est sélectionné
-        self.data = [0] * len(self.data)  # Efface les anciennes données
-        with open(filepath, 'r') as csvfile:  # Ouverture du fichier spécifié en tant que csv
-            csvreader = csv.reader(csvfile, delimiter=';')  # Définition du séparateur de données
-            for row in csvreader:  # Lecture des données
-                try:
-                    key = int(row[0])  # Lecture des canaux
-                    value = int(row[1])  # Lecture des valeurs relevées
-                    if key > 1024:
-                        print(f"Line {row} greater than limit has been ignored.")
-                        continue  # Ignore la ligne si la valeur dépasse 1024
-                    self.data[key] = value  # Affectation des données dans le tableau data
-                except (ValueError, IndexError) as e:
-                    # Log the error and continue
-                    print(f"Error processing line : {row}. IndexError: {e}")
-                    continue
-        self.plot_uart_data(0) # On met à jour l'affichage des données
+        answer = messagebox.askyesno("Load new data ?", "Loading a file will erase all existing data currently measured. Do you wish to continue ?")
+        if answer:
+            filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])  # Ouverture d'un explorateur de fichier pour sélectionner un fichier csv à lire
+            if not filepath:
+                return  # Termine la fonction ici si aucun fichier n'est sélectionné
+            self.data = [0] * len(self.data)  # Efface les anciennes données
+            with open(filepath, 'r') as csvfile:  # Ouverture du fichier spécifié en tant que csv
+                csvreader = csv.reader(csvfile, delimiter=';')  # Définition du séparateur de données
+                for row in csvreader:  # Lecture des données
+                    try:
+                        key = int(row[0])  # Lecture des canaux
+                        value = int(row[1])  # Lecture des valeurs relevées
+                        if key > 1024:
+                            print(f"Line {row} greater than limit has been ignored.")
+                            continue  # Ignore la ligne si la valeur dépasse 1024
+                        self.data[key] = value  # Affectation des données dans le tableau data
+                    except (ValueError, IndexError) as e:
+                        # Log the error and continue
+                        print(f"Error processing line : {row}. IndexError: {e}")
+                        continue
+            self.plot_uart_data(0) # On met à jour l'affichage des données
 
     def save_to_csv(self):
         # Ouvrir une boîte de dialogue pour choisir l'emplacement de sauvegarde
@@ -204,6 +210,18 @@ class controlGRAPH(tk.Frame):
                 for i, value in enumerate(self.data):
                     writer.writerow([i, value])
             messagebox.showinfo("Success", f"Data has been saved to {file_path}")
+
+    def clear_data(self):
+        answer = messagebox.askyesno("Clear All Data ?", "Do you really wish to remove all measured data ? Action can not be reverted.")
+        if answer:
+            self.data = [0] * len(self.data)
+            self.ax.clear()
+            self.ax.plot(self.data, label='Measured Data')
+            self.ax.set_title('Graphic Displayer')  # Titre
+            self.ax.set_xlabel('Channel')  # Abscisse
+            self.ax.set_ylabel('Iteration')  # Ordonnée
+            self.ax.grid(True)  # Affichage d'une grille
+            self.canvas.draw()
 
 
 
