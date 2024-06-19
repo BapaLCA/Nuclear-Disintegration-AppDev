@@ -193,7 +193,7 @@ class controlGRAPH(tk.Frame):
                         if key > 1024:
                             print(f"Line {row} greater than limit has been ignored.")
                             continue  # Ignore la ligne si la valeur dépasse 1024
-                        self.data[key] = value  # Affectation des données dans le tableau data
+                        self.data[key] = self.data[key]+value  # Affectation des données dans le tableau data
                     except (ValueError, IndexError) as e:
                         # Log the error and continue
                         print(f"Error processing line : {row}. IndexError: {e}")
