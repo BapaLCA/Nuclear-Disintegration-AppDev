@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, OptionMenu, StringVar, Label, Button, Entry, messagebox
+from tkinter import ttk, OptionMenu, StringVar, Label, Button, Entry, messagebox, Checkbutton
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
@@ -54,6 +54,9 @@ class controller(tk.Frame):
     def plot_uart_data(self, data):
         self.graph_control.plot_uart_data(data)
 
+    def plot_fit_function(self):
+        print("test")
+
 
 
 class controlGRAPH(tk.Frame):
@@ -97,19 +100,20 @@ class controlGRAPH(tk.Frame):
         self.entry.insert(0, "0")
 
         # Bouton pour récupérer la valeur saisie
-        self.button_confirm = Button(self.control_frame, text="Confirm", command=self.show_entry_value)
+        self.button_confirm = Checkbutton(self.control_frame, text="Confirm", command=self.show_entry_value)
         self.button_confirm.grid(row=0, column=3, padx=5, pady=5)
 
-        # Bouton pour tracer l'Exponentielle
-        self.button_exp = Button(self.control_frame, text="Add Erlang Fit", command=lambda: add_erlang_fit(self.data, self.canvas, self.ax, self.user_input))
+        # Variable pour la checkbox
+        self.fit_erlang = tk.BooleanVar()
+        self.fit_gaussian = tk.BooleanVar()
+        self.fit_poisson = tk.BooleanVar()
+
+        # Checkboxes pour tracer Erlang, Gaussienne ou/et Poisson
+        self.button_exp = Checkbutton(self.control_frame, text="Add Erlang Fit", variable=self.fit_erlang, command=self.update_plot)
         self.button_exp.grid(row=1, column=0, padx=5, pady=5)
-
-        # Bouton pour tracer la Gaussienne
-        self.button_gaussian = Button(self.control_frame, text="Add Gaussian Fit", command=lambda: add_gaussian_fit(self.data, self.canvas, self.ax, self.user_input))
+        self.button_gaussian = Checkbutton(self.control_frame, text="Add Gaussian Fit", variable=self.fit_gaussian, command=self.update_plot)
         self.button_gaussian.grid(row=1, column=1, padx=5, pady=5)
-
-        # Bouton pour tracer Poisson
-        self.button_poisson = Button(self.control_frame, text="Add Poisson Fit", command=lambda: add_poisson_fit(self.data, self.canvas, self.ax, self.user_input))
+        self.button_poisson = Checkbutton(self.control_frame, text="Add Poisson Fit", variable=self.fit_poisson, command=self.update_plot)
         self.button_poisson.grid(row=1, column=2, padx=5, pady=5)
 
     def load_file(self):
@@ -122,10 +126,19 @@ class controlGRAPH(tk.Frame):
     def plot_uart_data(self, uart_data):
         print("Plot called")
         self.data = np.add(self.data, uart_data)
+        self.update_plot()
+
+    def update_plot(self):
         if self.data is not None:
-            #plot_data(self.data, self.canvas, self.ax, self.user_input)
             self.ax.clear()
-            self.ax.plot(self.data)
+            self.ax.plot(self.data, label='Données Principales')
+            if self.fit_erlang.get():
+                self.add_erlang_fit(self.ax, self.data, 1)  # Utiliser une valeur de k fixe (2) ou ajustable
+            if self.fit_gaussian.get():
+                self.add_gaussian_fit(self.ax, self.data)
+            if self.fit_poisson.get():
+                self.add_poisson_fit(self.ax, self.data)
+            self.ax.legend()
             self.canvas.draw()
         else:
             print("Data is null")
@@ -133,6 +146,15 @@ class controlGRAPH(tk.Frame):
     def show_entry_value(self):
         self.user_input = self.entry.get()
         print(f"Frequency value entered: {self.user_input}")
+
+    def add_erlang_fit(self, ax, data, k_value):
+        add_erlang_fit(ax, data, k_value)
+
+    def add_gaussian_fit(self, ax, data):
+        add_gaussian_fit(ax, data)
+
+    def add_poisson_fit(self, ax, data):
+        add_poisson_fit(ax, data)
 
 
 
