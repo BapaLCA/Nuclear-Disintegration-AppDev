@@ -345,7 +345,7 @@ void interrupt(void) {
  cpt_data[cpt]++;
  }
  }
- if(cpt_data[cpt]==4){
+ if(cpt_data[cpt]==255){
  INTCON &= 0b00110111;
  flagWrite = 1;
  }
@@ -430,7 +430,7 @@ void main() {
  while(PORTC.B0);
  }
 
- if(cpt_data[cpt]==4){
+ if(cpt_data[cpt]==255){
  INTCON &= 0b00110111;
  flagWrite = 1;
  }

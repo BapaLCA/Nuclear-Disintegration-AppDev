@@ -1299,7 +1299,7 @@ L__interrupt120:
 L_interrupt59:
 ;main.c,121 :: 		}
 L_interrupt58:
-;main.c,122 :: 		if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
+;main.c,122 :: 		if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       FSR0L+0 
@@ -1309,7 +1309,7 @@ L_interrupt58:
 	MOVF        POSTINC0+0, 0 
 	MOVWF       R1 
 	MOVF        R1, 0 
-	XORLW       4
+	XORLW       255
 	BTFSS       STATUS+0, 2 
 	GOTO        L_interrupt60
 ;main.c,123 :: 		INTCON &= 0b00110111; // Desactive les interruptions
@@ -1582,7 +1582,7 @@ L_main80:
 L_main81:
 ;main.c,205 :: 		}
 L_main79:
-;main.c,207 :: 		if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
+;main.c,207 :: 		if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       FSR0L+0 
@@ -1592,7 +1592,7 @@ L_main79:
 	MOVF        POSTINC0+0, 0 
 	MOVWF       R1 
 	MOVF        R1, 0 
-	XORLW       4
+	XORLW       255
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main82
 ;main.c,208 :: 		INTCON &= 0b00110111; // Desactive toutes les interruptions pour l'ecriture

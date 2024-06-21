@@ -119,7 +119,7 @@ void interrupt(void) {
                     cpt_data[cpt]++;    // Sauvegarde de la donnee dans le canal correspondant
                     }
                 }
-                if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
+                if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
                     INTCON &= 0b00110111; // Desactive les interruptions
                     flagWrite = 1; // On active le flag d'ecriture des donnees
                     }
@@ -204,7 +204,7 @@ void main() {
                       while(PORTC.B0); // On attend que le niveau haut d'horloge se termine
                       }
 
-                      if(cpt_data[cpt]==4){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
+                      if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
                           INTCON &= 0b00110111; // Desactive toutes les interruptions pour l'ecriture
                           flagWrite = 1; // On active le flag d'ecriture des donnees
                           }
