@@ -10,24 +10,6 @@ import csv
 from collections import defaultdict
 from tkinter import filedialog
 
-def createGraph(x_coord, y_coord, canvas, root):
-# Crée une figure matplotlib vide
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.set_title('Graphic Displayer')  # Titre
-    ax.set_xlabel('Time (in µs)')  # Abscisse
-    ax.set_ylabel('Iteration')  # Ordonnée
-    ax.grid(True)  # Affichage d'une grille
-
-    # Intègre la figure matplotlib dans Tkinter
-    figure_canvas = FigureCanvasTkAgg(fig, master=root)
-    figure_canvas.draw()
-    figure_widget = figure_canvas.get_tk_widget()
-
-    # Place la figure aux coordonnées données
-    canvas.create_window(x_coord, y_coord, window=figure_widget, anchor=tk.NW)
-
-    return fig, ax
-
 class controller(tk.Frame):
     def __init__(self, parent, bottom_right_frame, uart_terminal):
         super().__init__(parent)
@@ -49,6 +31,8 @@ class controller(tk.Frame):
         pic_control.update_buttons_state() # Si le terminal est bien connecté, on rend utilisable les boutons de contrôle
         uart_terminal.send_data('?') # On demande l'état actuel du PIC (Le premier char est toujours ignoré, je ne sais pas pourquoi)
         uart_terminal.send_data('?')
+        if uart_terminal.check_status!='i': # Si le PIC est actuellement en train d'écrire lors du démarrage de l'appli, on demande son arrêt
+            uart_terminal.send_data('s')
 
     def plot_uart_data(self, data):
         self.graph_control.plot_uart_data(data)
@@ -127,6 +111,7 @@ class controlGRAPH(tk.Frame):
     def plot_uart_data(self, uart_data):
         print("Plot called")
         self.data = np.add(self.data, uart_data)
+        uart_data = [0] * len(uart_data)
         self.update_plot()
 
     def set_factor_k(self, value):
@@ -198,7 +183,8 @@ class controlGRAPH(tk.Frame):
                         # Log the error and continue
                         print(f"Error processing line : {row}. IndexError: {e}")
                         continue
-            self.plot_uart_data(0) # On met à jour l'affichage des données
+            uart_data = [0]*1024 # Création d'un tableau de données uart vide pour appeler la fonction plot uart
+            self.plot_uart_data(uart_data) # On met à jour l'affichage des données
 
     def save_to_csv(self):
         # Ouvrir une boîte de dialogue pour choisir l'emplacement de sauvegarde
@@ -246,7 +232,7 @@ class controlPIC(tk.Frame):
         self.label1.grid(row=0, column=0, padx=5, pady=5)
         
         self.label2 = ttk.Label(self, text="K factor")
-        self.label2.grid(row=1, column=0, padx=5, pady=5)
+        #self.label2.grid(row=1, column=0, padx=5, pady=5)
 
     def create_widgets(self):
         # Ajouter des boutons au conteneur
@@ -255,7 +241,7 @@ class controlPIC(tk.Frame):
         self.buttons.append(startMeasures)
         
         stopMeasures = ttk.Button(self, text="Stop", command=lambda:self.on_stopMeasures_click(self.uart_terminal))
-        stopMeasures.grid(row=1, column=2, padx=5, pady=5)
+        #stopMeasures.grid(row=1, column=2, padx=5, pady=5)
         self.buttons.append(stopMeasures)
 
         # Selection du Mode de mesure
@@ -271,7 +257,7 @@ class controlPIC(tk.Frame):
         self.factor_var.set("-")
         self.factor_options = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         self.factor_menu = OptionMenu(self, self.factor_var, *self.factor_options)
-        self.factor_menu.grid(row=1, column=1, padx=5, pady=5)
+        #self.factor_menu.grid(row=1, column=1, padx=5, pady=5)
         self.factor_var.trace_add("write", self.on_factor_select)    
 
 
@@ -284,10 +270,17 @@ class controlPIC(tk.Frame):
             if mode == "Erlang":  # On vérifie que les paramètres sont biens configurés avant lancement
                 if "1" <= factor <= "9":
                     self.send_character('g')
+                    self.buttons[0].grid_forget()
+                    self.buttons[1].grid(row=0, column=2, padx=5, pady=5)
+                    self.mode_menu.config(state=tk.DISABLED)
+                    self.factor_menu.config(state=tk.DISABLED)
                 else:
                     messagebox.showinfo("Configuration error", "Factor k must be set!")
             elif mode == "Poisson":
                 self.send_character('g')
+                self.buttons[0].grid_forget()
+                self.buttons[1].grid(row=0, column=2, padx=5, pady=5)
+                self.mode_menu.config(state=tk.DISABLED)
             else:
                 messagebox.showinfo("Configuration error", "Mode must be set!")
         else:
@@ -299,6 +292,10 @@ class controlPIC(tk.Frame):
             while uart_terminal.get_status == "w": # On attend la fin de la transmission de données avant l'arrêt
                 time.sleep(1)
             self.send_character('s')
+            self.buttons[1].grid_forget()
+            self.buttons[0].grid(row=0, column=2, padx=5, pady=5)
+            self.mode_menu.config(state=tk.NORMAL)
+            self.factor_menu.config(state=tk.NORMAL)
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
@@ -317,8 +314,12 @@ class controlPIC(tk.Frame):
         if self.uart_terminal and self.uart_terminal.serial_port:
             if mode == "Erlang":
                 self.uart_terminal.send_data('e')
+                self.factor_menu.grid(row=1, column=1, padx=5, pady=5) # On fait apparaitre le menu de séléction de k
+                self.label2.grid(row=1, column=0, padx=5, pady=5)
             elif mode == "Poisson":
                 self.uart_terminal.send_data('p')
+                self.factor_menu.grid_forget() # On fait disparaitre le menu de séléction de k
+                self.label2.grid_forget()
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 

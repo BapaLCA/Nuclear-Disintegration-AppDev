@@ -19,7 +19,7 @@ class UARTTerminal(tk.Frame):
         # Entry et bouton pour saisir et envoyer des données
         self.entry = Entry(self, font=("Arial", 12))
         self.entry.pack(side=tk.LEFT, expand=True, fill='x')
-        self.send_button = Button(self, text="Envoyer", command=self.send_data_entry)
+        self.send_button = Button(self, text="Send", command=self.send_data_entry)
         self.send_button.pack(side=tk.RIGHT)
 
         # Menu déroulant pour sélectionner le port COM
