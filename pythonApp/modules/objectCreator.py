@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, OptionMenu, StringVar, Label, Button, Entry, messagebox, Checkbutton
+from tkinter import ttk, OptionMenu, StringVar, Label, Button, Entry, messagebox, Checkbutton, simpledialog
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
@@ -101,12 +101,20 @@ class controlGRAPH(tk.Frame):
         self.button_poisson.grid(row=1, column=2, padx=5, pady=5)
 
         # Bouton de sauvegarde des données en fichier .csv
-        self.button_save_data = Button(self.control_frame, text="Save Data to CSV", command=self.save_to_csv)
+        self.button_save_data = Button(self.control_frame, text="Save Data to CSV", command=lambda:self.save_to_csv(self.data))
         self.button_save_data.grid(row=0, column=1, padx=5, pady=5)
+
+        # Bouton de sauvegarde des données de fit function en fichier .csv
+        self.button_save_fit = Button(self.control_frame, text="Save Fit to CSV", command=self.choose_fit)
+        self.button_save_fit.grid(row=1,column=3,padx=5,pady=5)
+
+        # Données récupérées des fonctions fit
+        self.erlang_x = 0
+        self.erlang_y = 0
 
         # Bouton pour supprimer toutes les données actuellement chargées
         self.button_clear_data = Button(self.control_frame, text="Clear All Data", command=self.clear_data)
-        self.button_clear_data.grid(row=1, column=3, padx=5, pady=5)
+        self.button_clear_data.grid(row=1, column=4, padx=5, pady=5)
 
     def plot_uart_data(self, uart_data):
         print("Plot called")
@@ -154,7 +162,7 @@ class controlGRAPH(tk.Frame):
         messagebox.showinfo("Value selected", f"Frequency value entered: {self.user_input}")
 
     def add_erlang_fit(self, ax, data, k_value):
-        add_erlang_fit(ax, data, k_value)
+        self.erlang_x, self.erlang_y = add_erlang_fit(ax, data, k_value)
 
     def add_gaussian_fit(self, ax, data):
         add_gaussian_fit(ax, data)
@@ -186,14 +194,14 @@ class controlGRAPH(tk.Frame):
             uart_data = [0]*1024 # Création d'un tableau de données uart vide pour appeler la fonction plot uart
             self.plot_uart_data(uart_data) # On met à jour l'affichage des données
 
-    def save_to_csv(self):
+    def save_to_csv(self, data):
         # Ouvrir une boîte de dialogue pour choisir l'emplacement de sauvegarde
         file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
         if file_path:
             with open(file_path, mode='w', newline='') as file:
                 writer = csv.writer(file, delimiter=';')
                 # Écrire les données avec le format "numéro de cellule;valeur"
-                for i, value in enumerate(self.data):
+                for i, value in enumerate(data):
                     writer.writerow([i, value])
             messagebox.showinfo("Success", f"Data has been saved to {file_path}")
 
@@ -209,10 +217,53 @@ class controlGRAPH(tk.Frame):
             self.ax.grid(True)  # Affichage d'une grille
             self.canvas.draw()
 
+    def choose_fit(self):
+        dialog = CustomDialog(self.control_frame, title="Dialogue avec trois choix", show_choice1=self.fit_erlang, show_choice2=self.fit_gaussian, show_choice3=self.fit_poisson)
+        if dialog.choice == "Erlang":
+            x_rounded = np.round(self.erlang_x)
+            print(x_rounded)
+            tableau_2d = np.column_stack((x_rounded, self.erlang_y))
+            self.save_to_csv(self.erlang_y)
 
 
 
 
+
+
+class CustomDialog(simpledialog.Dialog):
+    def __init__(self, parent, title=None, show_choice1=True, show_choice2=True, show_choice3=True):
+        self.show_choice1 = show_choice1
+        self.show_choice2 = show_choice2
+        self.show_choice3 = show_choice3
+        super().__init__(parent, title=title)
+    
+    def body(self, master):
+        tk.Label(master, text="Faites un choix:").pack(pady=10)
+        
+        self.choice = None
+        
+        # Créez des boutons pour les trois choix
+        if self.show_choice1:
+            self.button1 = tk.Button(master, text="Erlang", command=lambda: self.set_choice("Erlang"))
+            self.button1.pack(side=tk.LEFT, padx=5)
+        
+        if self.show_choice2:
+            self.button2 = tk.Button(master, text="Gaussian", command=lambda: self.set_choice("Gaussian"))
+            self.button2.pack(side=tk.LEFT, padx=5)
+        
+        if self.show_choice3:
+            self.button3 = tk.Button(master, text="Poisson", command=lambda: self.set_choice("Poisson"))
+            self.button3.pack(side=tk.LEFT, padx=5)
+        
+        return self.button1 if self.show_choice1 else (self.button2 if self.show_choice2 else self.button3)
+
+
+    def set_choice(self, choice):
+        self.choice = choice
+        self.destroy()  # Ferme la boîte de dialogue
+
+    def apply(self):
+        self.result = self.choice
 
 
 
@@ -232,7 +283,7 @@ class controlPIC(tk.Frame):
         self.label1.grid(row=0, column=0, padx=5, pady=5)
         
         self.label2 = ttk.Label(self, text="K factor")
-        #self.label2.grid(row=1, column=0, padx=5, pady=5)
+        self.label2.grid(row=1, column=0, padx=5, pady=5)
 
     def create_widgets(self):
         # Ajouter des boutons au conteneur
@@ -241,7 +292,6 @@ class controlPIC(tk.Frame):
         self.buttons.append(startMeasures)
         
         stopMeasures = ttk.Button(self, text="Stop", command=lambda:self.on_stopMeasures_click(self.uart_terminal))
-        #stopMeasures.grid(row=1, column=2, padx=5, pady=5)
         self.buttons.append(stopMeasures)
 
         # Selection du Mode de mesure
@@ -249,6 +299,7 @@ class controlPIC(tk.Frame):
         self.mode_var.set("-")
         self.mode_options = ["Erlang", "Poisson"]
         self.mode_menu = OptionMenu(self, self.mode_var, *self.mode_options)
+        self.mode_menu.config(width=7)
         self.mode_menu.grid(row=0, column=1, padx=5, pady=5)
         self.mode_var.trace_add("write", self.on_mode_select)
 
@@ -257,8 +308,9 @@ class controlPIC(tk.Frame):
         self.factor_var.set("-")
         self.factor_options = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         self.factor_menu = OptionMenu(self, self.factor_var, *self.factor_options)
-        #self.factor_menu.grid(row=1, column=1, padx=5, pady=5)
-        self.factor_var.trace_add("write", self.on_factor_select)    
+        self.factor_menu.grid(row=1, column=1, padx=5, pady=5)
+        self.factor_var.trace_add("write", self.on_factor_select)
+        self.factor_menu.config(state=tk.DISABLED)    
 
 
     # Commande de lancement des mesures
@@ -314,12 +366,10 @@ class controlPIC(tk.Frame):
         if self.uart_terminal and self.uart_terminal.serial_port:
             if mode == "Erlang":
                 self.uart_terminal.send_data('e')
-                self.factor_menu.grid(row=1, column=1, padx=5, pady=5) # On fait apparaitre le menu de séléction de k
-                self.label2.grid(row=1, column=0, padx=5, pady=5)
+                self.factor_menu.config(state=tk.NORMAL) # On active l'accès au facteur k
             elif mode == "Poisson":
                 self.uart_terminal.send_data('p')
-                self.factor_menu.grid_forget() # On fait disparaitre le menu de séléction de k
-                self.label2.grid_forget()
+                self.factor_menu.config(state=tk.DISABLED) # On desactive l'accès au facteur k
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
@@ -334,4 +384,5 @@ class controlPIC(tk.Frame):
         for button in self.buttons:
             button.config(state=state)
         self.factor_menu.config(state=state)
+        self.factor_menu.config(state=tk.DISABLED)
         self.mode_menu.config(state=state)

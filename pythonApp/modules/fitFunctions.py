@@ -36,6 +36,7 @@ def add_erlang_fit(ax, data, k_value):
         print(f"Erreur d'ajustement pour k={k_value}: {e}")
     except Exception as e:
         print(f"Erreur inattendue: {e}")
+    return x_data, y_data
 
 def gauss(x, a, x0, sigma):
     # Définition de la formule générale d'une gaussienne
