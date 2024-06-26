@@ -111,6 +111,10 @@ class controlGRAPH(tk.Frame):
         # Données récupérées des fonctions fit
         self.erlang_x = 0
         self.erlang_y = 0
+        self.gaussian_x = 0
+        self.gaussian_y = 0
+        self.poisson_x = 0
+        self.poisson_y = 0
 
         # Bouton pour supprimer toutes les données actuellement chargées
         self.button_clear_data = Button(self.control_frame, text="Clear All Data", command=self.clear_data)
@@ -165,10 +169,10 @@ class controlGRAPH(tk.Frame):
         self.erlang_x, self.erlang_y = add_erlang_fit(ax, data, k_value)
 
     def add_gaussian_fit(self, ax, data):
-        add_gaussian_fit(ax, data)
+        self.gaussian_x, self.gaussian_y = add_gaussian_fit(ax, data)
 
     def add_poisson_fit(self, ax, data):
-        add_poisson_fit(ax, data)
+        self.poisson_x, self.poisson_y = add_poisson_fit(ax, data)
 
     def open_file(self):
         answer = messagebox.askyesno("Load new data ?", "Loading a file will erase all existing data currently measured. Do you wish to continue ?")
@@ -182,7 +186,7 @@ class controlGRAPH(tk.Frame):
                 for row in csvreader:  # Lecture des données
                     try:
                         key = int(row[0])  # Lecture des canaux
-                        value = int(row[1])  # Lecture des valeurs relevées
+                        value = float(row[1])  # Lecture des valeurs relevées
                         if key > 1024:
                             print(f"Line {row} greater than limit has been ignored.")
                             continue  # Ignore la ligne si la valeur dépasse 1024
@@ -209,6 +213,9 @@ class controlGRAPH(tk.Frame):
         answer = messagebox.askyesno("Clear All Data ?", "Do you really wish to remove all measured data ? Action can not be reverted.")
         if answer:
             self.data = [0] * len(self.data)
+            self.fit_erlang = 0 # Disable all fit functions
+            self.fit_poisson = 0
+            self.fit_gaussian = 0
             self.ax.clear()
             self.ax.plot(self.data, label='Measured Data')
             self.ax.set_title('Graphic Displayer')  # Titre
@@ -220,10 +227,11 @@ class controlGRAPH(tk.Frame):
     def choose_fit(self):
         dialog = CustomDialog(self.control_frame, title="Dialogue avec trois choix", show_choice1=self.fit_erlang, show_choice2=self.fit_gaussian, show_choice3=self.fit_poisson)
         if dialog.choice == "Erlang":
-            x_rounded = np.round(self.erlang_x)
-            print(x_rounded)
-            tableau_2d = np.column_stack((x_rounded, self.erlang_y))
             self.save_to_csv(self.erlang_y)
+        if dialog.choice == "Poisson":
+            self.save_to_csv(self.poisson_y)
+        if dialog.choice == "Gaussian":
+            self.save_to_csv(self.gaussian_y)
 
 
 

@@ -1,4 +1,3 @@
-# erlang_fit.py
 import numpy as np
 import math
 from scipy.optimize import curve_fit
@@ -56,6 +55,7 @@ def add_gaussian_fit(ax, data):
     y_fit = gauss(x_fit, *popt)
     
     ax.plot(x_fit, y_fit, color='green', label='Gaussian Fit')
+    return x_fit, y_fit
 
 def add_poisson_fit(ax, data):
     scaled_keys = np.linspace(0, len(data), len(data)) #* 20  # 20 microsecondes par canal
@@ -66,3 +66,4 @@ def add_poisson_fit(ax, data):
     poisson_dist = poisson.pmf(np.arange(len(values)), mean) * sum(values)
     
     ax.plot(scaled_keys, poisson_dist, color='yellow', label='Poisson Fit')
+    return scaled_keys, poisson_dist
