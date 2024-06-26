@@ -9,6 +9,7 @@ import time
 import csv
 from collections import defaultdict
 from tkinter import filedialog
+from modules.chrono import Chronometer
 
 class controller(tk.Frame):
     def __init__(self, parent, bottom_right_frame, uart_terminal):
@@ -318,7 +319,12 @@ class controlPIC(tk.Frame):
         self.factor_menu = OptionMenu(self, self.factor_var, *self.factor_options)
         self.factor_menu.grid(row=1, column=1, padx=5, pady=5)
         self.factor_var.trace_add("write", self.on_factor_select)
-        self.factor_menu.config(state=tk.DISABLED)    
+        self.factor_menu.config(state=tk.DISABLED) 
+
+        # Chronometre
+        self.frame_chrono = Frame(self, bd=2, relief="groove")
+        self.chrono = Chronometer(self.frame_chrono, "Time elapsed :")
+        self.frame_chrono.grid(row=0, column=3, padx=5, pady=5)   
 
 
     # Commande de lancement des mesures
@@ -330,6 +336,7 @@ class controlPIC(tk.Frame):
             if mode == "Erlang":  # On vérifie que les paramètres sont biens configurés avant lancement
                 if "1" <= factor <= "9":
                     self.send_character('g')
+                    self.chrono.start()
                     self.buttons[0].grid_forget()
                     self.buttons[1].grid(row=0, column=2, padx=5, pady=5)
                     self.mode_menu.config(state=tk.DISABLED)
@@ -338,6 +345,7 @@ class controlPIC(tk.Frame):
                     messagebox.showinfo("Configuration error", "Factor k must be set!")
             elif mode == "Poisson":
                 self.send_character('g')
+                self.chrono.start()
                 self.buttons[0].grid_forget()
                 self.buttons[1].grid(row=0, column=2, padx=5, pady=5)
                 self.mode_menu.config(state=tk.DISABLED)
@@ -352,6 +360,7 @@ class controlPIC(tk.Frame):
             while uart_terminal.get_status == "w": # On attend la fin de la transmission de données avant l'arrêt
                 time.sleep(1)
             self.send_character('s')
+            self.chrono.stop()
             self.buttons[1].grid_forget()
             self.buttons[0].grid(row=0, column=2, padx=5, pady=5)
             self.mode_menu.config(state=tk.NORMAL)

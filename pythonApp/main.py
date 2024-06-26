@@ -65,7 +65,7 @@ def on_closing(root, terminal):
 ############################## Configuration des boutons et menus ##############################
 
 # Créer un frame principal pour le layout
-main_frame = tk.Frame(analysis)
+main_frame = tk.Frame(analysis, bg="red")
 main_frame.pack(expand=True, fill=tk.BOTH)
 
 # Configurer le layout pour qu'il s'étende correctement
@@ -75,7 +75,7 @@ main_frame.rowconfigure(0, weight=1)
 main_frame.rowconfigure(1, weight=1)
 
 # Créer les quatre frames pour les coins de l'application
-top_left_frame = tk.Frame(main_frame, bg="lightblue")
+top_left_frame = tk.Frame(main_frame, bg="blue")
 top_left_frame.grid(row=0, column=0, padx=5, pady=5)
 
 top_right_frame = tk.Frame(main_frame, bg="lightgreen")
