@@ -63,7 +63,7 @@ def on_closing(root, terminal):
     root.destroy()
 
 ############################## Configuration des boutons et menus ##############################
-
+"""
 # Créer un frame principal pour le layout
 main_frame = tk.Frame(analysis, bg="red")
 main_frame.pack(expand=True, fill=tk.BOTH)
@@ -94,12 +94,24 @@ terminal.pack(expand=True, fill=tk.BOTH)
 # Ajout du controleur
 control = controller(top_left_frame, bottom_right_frame, terminal)
 control.pack(expand=True, fill=tk.BOTH)
+"""
+
+left_frame = tk.Frame(analysis)
+left_frame.pack(expand=True, fill=tk.BOTH, side=LEFT)
+
+right_frame = tk.Frame(analysis)
+right_frame.pack(expand=True, fill=tk.BOTH, side=RIGHT)
+
+terminal = UARTTerminal(right_frame, plot_uart_data)
+terminal.pack(expand=True, fill=tk.BOTH, side=TOP)
+
+control = controller(left_frame, right_frame, terminal)
+control.pack(expand=True, fill=tk.BOTH, side=TOP, padx=5, pady=5)
 
 
-
-# Bouton pour quitter l'application (non fonctionnel pour le moment)
-bclose = Button(text="Close Application", command=(exit)) # Bouton pour fermer l'application
-bclose.pack(expand=True, fill=tk.BOTH)
+# Bouton pour quitter l'application
+bclose = Button(left_frame, text="Close Application", command=(exit)) # Bouton pour fermer l'application
+bclose.pack(expand=True, fill=tk.X, side=BOTTOM, pady=5)
 
 
 # Loop

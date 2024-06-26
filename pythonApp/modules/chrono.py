@@ -11,9 +11,9 @@ class Chronometer:
         self.time_elapsed = 0
         
         self.label = tk.Label(root, text=self.text)
-        self.label.pack(side=tk.LEFT, padx=2, pady=2)
+        self.label.pack(side=tk.LEFT, padx=1, pady=2)
         self.label = tk.Label(root, text="00:00:00", font=("Helvetica", 10))
-        self.label.pack(side=tk.LEFT, padx=2, pady=2)
+        self.label.pack(side=tk.LEFT, padx=1, pady=2)
         
         self.start_button = tk.Button(root, text="Start", command=self.start)
         #self.start_button.pack(side="left", padx=20)

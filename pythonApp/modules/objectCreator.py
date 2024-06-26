@@ -12,7 +12,7 @@ from tkinter import filedialog
 from modules.chrono import Chronometer
 
 class controller(tk.Frame):
-    def __init__(self, parent, bottom_right_frame, uart_terminal):
+    def __init__(self, parent, right_frame, uart_terminal):
         super().__init__(parent)
 
         # Ajout du graphique et des contrôles
@@ -24,8 +24,8 @@ class controller(tk.Frame):
         self.pic_control.pack(expand=True, fill=tk.BOTH)
 
         # Bouton de connexion
-        connect_button = Button(bottom_right_frame, text="Connecter", command=lambda:self.on_connect(uart_terminal, self.pic_control))
-        connect_button.pack(expand=True, fill=tk.BOTH)
+        connect_button = Button(right_frame, text="Connect", command=lambda:self.on_connect(uart_terminal, self.pic_control))
+        connect_button.pack(expand=True, fill=tk.X, side=tk.BOTTOM)
 
     def on_connect(self, uart_terminal, pic_control):
         uart_terminal.connect() # On se connecte au port série
@@ -52,10 +52,10 @@ class controlGRAPH(tk.Frame):
 
     def create_widgets(self):
         # Conteneur pour le graphique
-        self.graph_frame = tk.Frame(self)
+        self.graph_frame = tk.Frame(self, bg="blue")
         self.graph_frame.grid(row=0, column=0, sticky="nsew")
 
-        self.fig, self.ax = plt.subplots(figsize=(7, 5))
+        self.fig, self.ax = plt.subplots(figsize=(7, 5), dpi=100)
         self.ax.set_title('Graphic Displayer')  # Titre
         self.ax.set_xlabel('Time (in µs)')  # Abscisse
         self.ax.set_ylabel('Iteration')  # Ordonnée
@@ -65,7 +65,7 @@ class controlGRAPH(tk.Frame):
         self.canvas.get_tk_widget().pack(expand=True, fill=tk.BOTH)
 
         # Frame pour les widgets de contrôle
-        self.control_frame = tk.Frame(self)
+        self.control_frame = tk.Frame(self, bg="lightblue")
         self.control_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
 
         # Facteur K pour le mode Erlang
@@ -226,13 +226,16 @@ class controlGRAPH(tk.Frame):
             self.canvas.draw()
 
     def choose_fit(self):
-        dialog = CustomDialog(self.control_frame, title="Dialogue avec trois choix", show_choice1=self.fit_erlang, show_choice2=self.fit_gaussian, show_choice3=self.fit_poisson)
-        if dialog.choice == "Erlang":
-            self.save_to_csv(self.erlang_y)
-        if dialog.choice == "Poisson":
-            self.save_to_csv(self.poisson_y)
-        if dialog.choice == "Gaussian":
-            self.save_to_csv(self.gaussian_y)
+        if not self.fit_erlang.get() and not self.fit_poisson.get() and not self.fit_gaussian.get():
+            messagebox.showinfo("Saving Data error", "No fit function are currently plotted!")
+        else:
+            dialog = CustomDialog(self.control_frame, title="Saving fit data", show_choice1=self.fit_erlang.get(), show_choice2=self.fit_gaussian.get(), show_choice3=self.fit_poisson.get())
+            if dialog.choice == "Erlang":
+                self.save_to_csv(self.erlang_y)
+            if dialog.choice == "Poisson":
+                self.save_to_csv(self.poisson_y)
+            if dialog.choice == "Gaussian":
+                self.save_to_csv(self.gaussian_y)
 
 
 
@@ -240,29 +243,31 @@ class controlGRAPH(tk.Frame):
 
 
 class CustomDialog(simpledialog.Dialog):
-    def __init__(self, parent, title=None, show_choice1=True, show_choice2=True, show_choice3=True):
+    def __init__(self, parent, title=None, show_choice1=False, show_choice2=False, show_choice3=False):
         self.show_choice1 = show_choice1
         self.show_choice2 = show_choice2
         self.show_choice3 = show_choice3
         super().__init__(parent, title=title)
     
     def body(self, master):
-        tk.Label(master, text="Faites un choix:").pack(pady=10)
+        tk.Label(master, text="Select which fit function you wish to save:").pack(pady=10)
         
         self.choice = None
-        
+        self.button1 = tk.Button(master, text="Erlang", command=lambda: self.set_choice("Erlang"))
+        self.button2 = tk.Button(master, text="Gaussian", command=lambda: self.set_choice("Gaussian"))
+        self.button3 = tk.Button(master, text="Poisson", command=lambda: self.set_choice("Poisson"))
         # Créez des boutons pour les trois choix
-        if self.show_choice1:
-            self.button1 = tk.Button(master, text="Erlang", command=lambda: self.set_choice("Erlang"))
-            self.button1.pack(side=tk.LEFT, padx=5)
+        if self.show_choice1==True:
+            
+            self.button1.pack(side=tk.LEFT, padx=5, expand=True)
         
-        if self.show_choice2:
-            self.button2 = tk.Button(master, text="Gaussian", command=lambda: self.set_choice("Gaussian"))
-            self.button2.pack(side=tk.LEFT, padx=5)
+        if self.show_choice2==True:
+            
+            self.button2.pack(side=tk.LEFT, padx=5, expand=True)
         
-        if self.show_choice3:
-            self.button3 = tk.Button(master, text="Poisson", command=lambda: self.set_choice("Poisson"))
-            self.button3.pack(side=tk.LEFT, padx=5)
+        if self.show_choice3==True:
+            
+            self.button3.pack(side=tk.LEFT, padx=5, expand=True)
         
         return self.button1 if self.show_choice1 else (self.button2 if self.show_choice2 else self.button3)
 
