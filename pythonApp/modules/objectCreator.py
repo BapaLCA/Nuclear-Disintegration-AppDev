@@ -44,8 +44,10 @@ class controlGRAPH(tk.Frame):
     def __init__(self, parent, uart_terminal):
         super().__init__(parent)
         self.data = [0]*1024
+        self.time = [0]*1024
         self.user_input = 0
         self.factor_k = 1
+        self.mode = "-"
 
         self.create_widgets()
         self.plot_uart_data(uart_terminal.received_data)
@@ -57,7 +59,7 @@ class controlGRAPH(tk.Frame):
 
         self.fig, self.ax = plt.subplots(figsize=(7, 5), dpi=100)
         self.ax.set_title('Graphic Displayer')  # Titre
-        self.ax.set_xlabel('Time (in µs)')  # Abscisse
+        self.ax.set_xlabel('Channel')  # Abscisse
         self.ax.set_ylabel('Iteration')  # Ordonnée
         self.ax.grid(True)  # Affichage d'une grille
 
@@ -132,33 +134,71 @@ class controlGRAPH(tk.Frame):
 
     def update_plot(self):
         if self.data is not None:
-            # Filtrer les indices des valeurs non nulles
-            non_zero_indices = [i for i, value in enumerate(self.data) if value != 0]
-            
-            if non_zero_indices:
-                # Ajuster les limites de l'axe x pour zoomer sur les valeurs non nulles
-                min_index = min(non_zero_indices)
-                max_index = max(non_zero_indices)
+            print("Update plot called")
+            print(self.mode)
+            if self.mode == "Erlang":
+                print("Erlang mode detected")
+                # Rescaling
+                if self.entry.get() != '0':
+                    period = 1/int(self.entry.get())*1000000
+                    self.time = np.arange(0, len(self.data) * period, period)
+                else:
+                    self.time=self.data
+                # Filtrer les indices des valeurs non nulles dans self.data
+                non_zero_indices = [i for i, value in enumerate(self.data) if value != 0]
                 
-                self.ax.clear()
-                self.ax.plot(self.data, label='Measured Data')
-                self.ax.set_title('Graphic Displayer')  # Titre
-                self.ax.set_xlabel('Channel')  # Abscisse
-                self.ax.set_ylabel('Iteration')  # Ordonnée
-                self.ax.grid(True)  # Affichage d'une grille
-                
-                if self.fit_erlang.get():
-                    self.add_erlang_fit(self.ax, self.data, self.factor_k)
-                if self.fit_gaussian.get():
-                    self.add_gaussian_fit(self.ax, self.data)
-                if self.fit_poisson.get():
-                    self.add_poisson_fit(self.ax, self.data)
-                
-                self.ax.set_xlim(min_index, max_index)
-                self.ax.legend()
-                self.canvas.draw()
+                if non_zero_indices:
+                    # Ajuster les limites de l'axe x pour zoomer sur les valeurs non nulles
+                    min_index = min(non_zero_indices)
+                    max_index = max(non_zero_indices)
+                    
+                    self.ax.clear()
+                    self.ax.plot(self.time, self.data, label='Measured Data')
+                    self.ax.set_title(f"Time elapsed between {self.factor_k+1} atom disintegrations")  # Titre
+                    self.ax.set_xlabel('Time (microseconds)')  # Abscisse
+                    self.ax.set_ylabel('Iterance')  # Ordonnée
+                    self.ax.grid(True)  # Affichage d'une grille
+                    
+                    if self.fit_erlang.get():
+                        self.add_erlang_fit(self.ax, self.data, self.time, self.factor_k, period)
+                    if self.fit_gaussian.get():
+                        print("No Gaussian fit on Erlang mode")
+                    if self.fit_poisson.get():
+                        print("No Poisson fit on Erlang mode")
+                    
+                    self.ax.set_xlim(self.time[min_index], self.time[max_index])
+                    self.ax.legend()
+                    self.canvas.draw()
+                else:
+                    print("All data values are zero")
             else:
-                print("All data values are zero")
+                print("Default mode detected")
+                # Filtrer les indices des valeurs non nulles
+                non_zero_indices = [i for i, value in enumerate(self.data) if value != 0]
+                
+                if non_zero_indices:
+                    # Ajuster les limites de l'axe x pour zoomer sur les valeurs non nulles
+                    min_index = min(non_zero_indices)
+                    max_index = max(non_zero_indices)
+                    
+                    self.ax.clear()
+                    self.ax.plot(self.data, label='Measured Data')
+                    self.ax.set_title(f"Number of atom disintegrations measured in {1/int(self.entry.get())*1000} ms")  # Titre
+                    self.ax.set_xlabel('Number of atom disintegrations')  # Abscisse
+                    self.ax.set_ylabel('Iteration')  # Ordonnée
+                    self.ax.grid(True)  # Affichage d'une grille
+                    if self.mode == "Poisson":
+                        print("Poisson mode detected")
+                        if self.fit_erlang.get():
+                            print("No Erlang fit when Poisson mode")
+                        if self.fit_gaussian.get():
+                            self.add_gaussian_fit(self.ax, self.data)
+                        if self.fit_poisson.get():
+                            self.add_poisson_fit(self.ax, self.data)
+                    
+                    self.ax.set_xlim(min_index, max_index)
+                    self.ax.legend()
+                    self.canvas.draw()
         else:
             print("Data is null")
 
@@ -166,8 +206,8 @@ class controlGRAPH(tk.Frame):
         self.user_input = self.entry.get()
         messagebox.showinfo("Value selected", f"Frequency value entered: {self.user_input}")
 
-    def add_erlang_fit(self, ax, data, k_value):
-        self.erlang_x, self.erlang_y = add_erlang_fit(ax, data, k_value)
+    def add_erlang_fit(self, ax, data, time, k_value, period):
+        self.erlang_x, self.erlang_y = add_erlang_fit(ax, data, time, k_value, period)
 
     def add_gaussian_fit(self, ax, data):
         self.gaussian_x, self.gaussian_y = add_gaussian_fit(ax, data)
@@ -385,6 +425,7 @@ class controlPIC(tk.Frame):
 
     def on_mode_select(self, *args):
         mode = self.mode_var.get()
+        self.graph_control.mode = mode
         if self.uart_terminal and self.uart_terminal.serial_port:
             if mode == "Erlang":
                 self.uart_terminal.send_data('e')

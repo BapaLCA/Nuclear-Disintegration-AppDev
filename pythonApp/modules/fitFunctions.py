@@ -7,30 +7,30 @@ def erlang_pdf(x, A, k, lambd):
     # Définition de la formule de la distribution d'Erlang
     return A * (lambd ** k * x ** (k - 1) * np.exp(-lambd * x)) / math.factorial(k - 1)
 
-def add_erlang_fit(ax, data, k_value):
+def add_erlang_fit(ax, data, time, k_value, period):
     # Fonction pour l'affichage de l'exponentielle correspondant à la distribution d'Erlang.
+    print(data)
     values = data
-    scaled_keys = np.linspace(0, len(data), len(data)) #* 20  # 20 microsecondes par canal
+    keys = time  # Utilisez self.time ici
 
     try:
-        # Limiter les valeurs x à 1024
-        scaled_keys = scaled_keys[scaled_keys <= 1024]
-        values = values[:len(scaled_keys)]
+        # Limiter les valeurs x à la longueur des données
+        keys = keys[keys <= len(data) * period]
         
         # Ajustement de la courbe d'Erlang aux données
-        popt, _ = curve_fit(lambda x, A, lambd: erlang_pdf(x, A, k_value, lambd), scaled_keys, values, p0=[max(values), 0.1])
+        popt, _ = curve_fit(lambda x, A, lambd: erlang_pdf(x, A, k_value, lambd), keys, values, p0=[max(values), 0.1])
         
         # Récupération des paramètres optimaux (lambd seulement, k est connu)
         A_optimal, lambd_optimal = popt
         
         # Générer des points pour l'axe x
-        x_data = np.linspace(min(scaled_keys), min(1024, max(scaled_keys)), 1000)
+        x_data = np.linspace(min(keys), min(len(data) * period, max(keys)), 1000)
         
         # Calculer les valeurs de la fonction d'Erlang
         y_data = erlang_pdf(x_data, A_optimal, k_value, lambd_optimal)
         
         # Tracé des données expérimentales et de l'ajustement de la courbe d'Erlang
-        ax.plot(x_data, y_data, color='red', linewidth=2, label=f'Erlang Fit (k={k_value}, λ={lambd_optimal:.2f}, A={round(A_optimal, 2)})')
+        ax.plot(x_data, y_data, color='red', linewidth=2, label=f'Erlang Fit (k={k_value}, λ={lambd_optimal:.6f}, A={round(A_optimal, 2)})')
     except RuntimeError as e:
         print(f"Erreur d'ajustement pour k={k_value}: {e}")
     except Exception as e:
