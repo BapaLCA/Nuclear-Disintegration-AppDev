@@ -1,25 +1,20 @@
+# main.py
+# EXE can be built with the command : pyinstaller --onefile main.py --additional-hooks-dir serial\\__init__.py
+
 # Modules imports
 #from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_fit
-from modules.objectCreator import *
+from modules.controller import *
 from modules.terminalUART import *
 # General libraries
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from scipy.optimize import curve_fit
-import csv
 from collections import defaultdict
 import tkinter
-from tkinter import filedialog
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import *
-import math
-from scipy.stats import poisson
+import sys
 
 # Screen
 analysis = tkinter.Tk() # Définition d'un écran
 #analysis.geometry("1280x720") # Définition de la taille de l'écran
-analysis.attributes('-fullscreen', True)
+analysis.attributes('-fullscreen', False)
 analysis.title("Desintegrations Nucleaires") # Définition du nom de l'application
 
 # Méthode pour basculer entre plein écran et mode fenêtré
@@ -61,6 +56,7 @@ def plot_uart_data(uart_data):
 def on_closing(root, terminal):
     terminal.close()
     root.destroy()
+    sys.exit()
 
 ############################## Configuration des boutons et menus ##############################
 """
@@ -110,8 +106,8 @@ control.pack(expand=True, fill=tk.BOTH, side=TOP, padx=5, pady=5)
 
 
 # Bouton pour quitter l'application
-bclose = Button(left_frame, text="Close Application", command=(exit)) # Bouton pour fermer l'application
-bclose.pack(expand=True, fill=tk.X, side=BOTTOM, pady=5)
+#bclose = Button(left_frame, text="Close Application", command=(on_closing(analysis, terminal))) # Bouton pour fermer l'application
+#bclose.pack(expand=True, fill=tk.X, side=BOTTOM, pady=5)
 
 
 # Loop

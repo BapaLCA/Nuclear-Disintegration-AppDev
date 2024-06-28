@@ -6,8 +6,8 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=['numpy', 'tkinter', 'serial'],
-    hookspath=[],
+    hiddenimports=[],
+    hookspath=['serial\\\\__init__.py'],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
@@ -35,4 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['icon.ico'],
 )

@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, OptionMenu, StringVar, Label, Button, Entry, messagebox, Checkbutton, simpledialog
+from tkinter import ttk, OptionMenu, StringVar, Label, Button, Entry, messagebox, Checkbutton
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
@@ -7,9 +7,8 @@ from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_f
 import numpy as np
 import time
 import csv
-from collections import defaultdict
 from tkinter import filedialog
-from modules.chrono import Chronometer
+from modules.objects import Chronometer, CustomDialog
 
 class controller(tk.Frame):
     def __init__(self, parent, right_frame, uart_terminal):
@@ -25,7 +24,7 @@ class controller(tk.Frame):
 
         # Bouton de connexion
         connect_button = Button(right_frame, text="Connect", command=lambda:self.on_connect(uart_terminal, self.pic_control))
-        connect_button.pack(expand=True, fill=tk.X, side=tk.BOTTOM)
+        connect_button.pack(expand=True, fill=tk.X, side=tk.TOP)
 
     def on_connect(self, uart_terminal, pic_control):
         uart_terminal.connect() # On se connecte au port série
@@ -57,7 +56,7 @@ class controlGRAPH(tk.Frame):
         self.graph_frame = tk.Frame(self, bg="blue")
         self.graph_frame.grid(row=0, column=0, sticky="nsew")
 
-        self.fig, self.ax = plt.subplots(figsize=(7, 5), dpi=100)
+        self.fig, self.ax = plt.subplots(figsize=(8, 6), dpi=100)
         self.ax.set_title('Graphic Displayer')  # Titre
         self.ax.set_xlabel('Channel')  # Abscisse
         self.ax.set_ylabel('Iteration')  # Ordonnée
@@ -204,7 +203,9 @@ class controlGRAPH(tk.Frame):
 
     def show_entry_value(self):
         self.user_input = self.entry.get()
-        messagebox.showinfo("Value selected", f"Frequency value entered: {self.user_input}")
+        messagebox.showinfo("Value selected", f"Frequency value entered: {self.user_input} Hz")
+        if self.data is not None:
+            self.update_plot()
 
     def add_erlang_fit(self, ax, data, time, k_value, period):
         self.erlang_x, self.erlang_y = add_erlang_fit(ax, data, time, k_value, period)
@@ -282,42 +283,7 @@ class controlGRAPH(tk.Frame):
 
 
 
-class CustomDialog(simpledialog.Dialog):
-    def __init__(self, parent, title=None, show_choice1=False, show_choice2=False, show_choice3=False):
-        self.show_choice1 = show_choice1
-        self.show_choice2 = show_choice2
-        self.show_choice3 = show_choice3
-        super().__init__(parent, title=title)
-    
-    def body(self, master):
-        tk.Label(master, text="Select which fit function you wish to save:").pack(pady=10)
-        
-        self.choice = None
-        self.button1 = tk.Button(master, text="Erlang", command=lambda: self.set_choice("Erlang"))
-        self.button2 = tk.Button(master, text="Gaussian", command=lambda: self.set_choice("Gaussian"))
-        self.button3 = tk.Button(master, text="Poisson", command=lambda: self.set_choice("Poisson"))
-        # Créez des boutons pour les trois choix
-        if self.show_choice1==True:
-            
-            self.button1.pack(side=tk.LEFT, padx=5, expand=True)
-        
-        if self.show_choice2==True:
-            
-            self.button2.pack(side=tk.LEFT, padx=5, expand=True)
-        
-        if self.show_choice3==True:
-            
-            self.button3.pack(side=tk.LEFT, padx=5, expand=True)
-        
-        return self.button1 if self.show_choice1 else (self.button2 if self.show_choice2 else self.button3)
 
-
-    def set_choice(self, choice):
-        self.choice = choice
-        self.destroy()  # Ferme la boîte de dialogue
-
-    def apply(self):
-        self.result = self.choice
 
 
 
@@ -377,23 +343,30 @@ class controlPIC(tk.Frame):
         if self.uart_terminal is not None:  # On vérifie que le terminal existe bien
             mode = self.mode_var.get()
             factor = self.factor_var.get()
+            freq = int(self.graph_control.entry.get())
 
             if mode == "Erlang":  # On vérifie que les paramètres sont biens configurés avant lancement
                 if "1" <= factor <= "9":
+                    if(1 <= freq <= 50000):
+                        self.send_character('g')
+                        self.chrono.start()
+                        self.buttons[0].grid_forget()
+                        self.buttons[1].grid(row=0, column=2, padx=5, pady=5)
+                        self.mode_menu.config(state=tk.DISABLED)
+                        self.factor_menu.config(state=tk.DISABLED)
+                    else:
+                        messagebox.showinfo("Configuration error", "Frequence must be set between 1 Hz and 50 000 Hz!")
+                else:
+                    messagebox.showinfo("Configuration error", "Factor k must be set!")
+            elif mode == "Poisson":
+                if(1 <= freq <= 50000):
                     self.send_character('g')
                     self.chrono.start()
                     self.buttons[0].grid_forget()
                     self.buttons[1].grid(row=0, column=2, padx=5, pady=5)
                     self.mode_menu.config(state=tk.DISABLED)
-                    self.factor_menu.config(state=tk.DISABLED)
                 else:
-                    messagebox.showinfo("Configuration error", "Factor k must be set!")
-            elif mode == "Poisson":
-                self.send_character('g')
-                self.chrono.start()
-                self.buttons[0].grid_forget()
-                self.buttons[1].grid(row=0, column=2, padx=5, pady=5)
-                self.mode_menu.config(state=tk.DISABLED)
+                    messagebox.showinfo("Configuration error", "Frequence must be set between 1 Hz and 50 000 Hz!")
             else:
                 messagebox.showinfo("Configuration error", "Mode must be set!")
         else:

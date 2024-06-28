@@ -1,6 +1,7 @@
 import tkinter as tk
 from threading import Thread
 import time
+from tkinter import simpledialog
 
 class Chronometer:
     def __init__(self, root, text):
@@ -52,3 +53,42 @@ class Chronometer:
         minutes, seconds = divmod(self.time_elapsed, 60)
         hours, minutes = divmod(minutes, 60)
         self.label.config(text=f"{hours:02}:{minutes:02}:{seconds:02}")
+
+
+
+class CustomDialog(simpledialog.Dialog):
+    def __init__(self, parent, title=None, show_choice1=False, show_choice2=False, show_choice3=False):
+        self.show_choice1 = show_choice1
+        self.show_choice2 = show_choice2
+        self.show_choice3 = show_choice3
+        super().__init__(parent, title=title)
+    
+    def body(self, master):
+        tk.Label(master, text="Select which fit function you wish to save:").pack(pady=10)
+        
+        self.choice = None
+        self.button1 = tk.Button(master, text="Erlang", command=lambda: self.set_choice("Erlang"))
+        self.button2 = tk.Button(master, text="Gaussian", command=lambda: self.set_choice("Gaussian"))
+        self.button3 = tk.Button(master, text="Poisson", command=lambda: self.set_choice("Poisson"))
+        # Créez des boutons pour les trois choix
+        if self.show_choice1==True:
+            
+            self.button1.pack(side=tk.LEFT, padx=5, expand=True)
+        
+        if self.show_choice2==True:
+            
+            self.button2.pack(side=tk.LEFT, padx=5, expand=True)
+        
+        if self.show_choice3==True:
+            
+            self.button3.pack(side=tk.LEFT, padx=5, expand=True)
+        
+        return self.button1 if self.show_choice1 else (self.button2 if self.show_choice2 else self.button3)
+
+
+    def set_choice(self, choice):
+        self.choice = choice
+        self.destroy()  # Ferme la boîte de dialogue
+
+    def apply(self):
+        self.result = self.choice
