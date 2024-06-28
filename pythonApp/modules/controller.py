@@ -16,11 +16,11 @@ class controller(tk.Frame):
 
         # Ajout du graphique et des contrôles
         self.graph_control = controlGRAPH(self, uart_terminal)
-        self.graph_control.pack(expand=True, fill=tk.BOTH)
+        self.graph_control.pack(expand=True, fill=tk.BOTH, side=tk.TOP)
 
         # Ajout du conteneur de contrôle du PIC
         self.pic_control = controlPIC(self, uart_terminal, self.graph_control)
-        self.pic_control.pack(expand=True, fill=tk.BOTH)
+        self.pic_control.pack(expand=True, fill=tk.BOTH, side=tk.TOP)
 
         # Bouton de connexion
         connect_button = Button(right_frame, text="Connect", command=lambda:self.on_connect(uart_terminal, self.pic_control))
@@ -89,7 +89,7 @@ class controlGRAPH(tk.Frame):
         self.button_confirm = Button(self.control_frame, text="Confirm", command=self.show_entry_value)
         self.button_confirm.grid(row=0, column=4, padx=5, pady=5)
 
-        # Variable pour la checkbox
+        # Variable pour les checkboxes
         self.fit_erlang = tk.BooleanVar()
         self.fit_gaussian = tk.BooleanVar()
         self.fit_poisson = tk.BooleanVar()
@@ -101,6 +101,11 @@ class controlGRAPH(tk.Frame):
         self.button_gaussian.grid(row=1, column=1, padx=5, pady=5)
         self.button_poisson = Checkbutton(self.control_frame, text="Add Poisson Fit", variable=self.fit_poisson, command=self.update_plot)
         self.button_poisson.grid(row=1, column=2, padx=5, pady=5)
+
+        # Disable fit buttons until mode is set
+        self.button_exp.config(state=tk.DISABLED)
+        self.button_gaussian.config(state=tk.DISABLED)
+        self.button_poisson.config(state=tk.DISABLED)
 
         # Bouton de sauvegarde des données en fichier .csv
         self.button_save_data = Button(self.control_frame, text="Save Data to CSV", command=lambda:self.save_to_csv(self.data))
@@ -217,28 +222,32 @@ class controlGRAPH(tk.Frame):
         self.poisson_x, self.poisson_y = add_poisson_fit(ax, data)
 
     def open_file(self):
-        answer = messagebox.askyesno("Load new data ?", "Loading a file will erase all existing data currently measured. Do you wish to continue ?")
-        if answer:
-            filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])  # Ouverture d'un explorateur de fichier pour sélectionner un fichier csv à lire
-            if not filepath:
-                return  # Termine la fonction ici si aucun fichier n'est sélectionné
-            self.data = [0] * len(self.data)  # Efface les anciennes données
-            with open(filepath, 'r') as csvfile:  # Ouverture du fichier spécifié en tant que csv
-                csvreader = csv.reader(csvfile, delimiter=';')  # Définition du séparateur de données
-                for row in csvreader:  # Lecture des données
-                    try:
-                        key = int(row[0])  # Lecture des canaux
-                        value = float(row[1])  # Lecture des valeurs relevées
-                        if key > 1024:
-                            print(f"Line {row} greater than limit has been ignored.")
-                            continue  # Ignore la ligne si la valeur dépasse 1024
-                        self.data[key] = self.data[key]+value  # Affectation des données dans le tableau data
-                    except (ValueError, IndexError) as e:
-                        # Log the error and continue
-                        print(f"Error processing line : {row}. IndexError: {e}")
-                        continue
-            uart_data = [0]*1024 # Création d'un tableau de données uart vide pour appeler la fonction plot uart
-            self.plot_uart_data(uart_data) # On met à jour l'affichage des données
+        if 1 <= int(self.entry.get()) <= 50000:
+
+            answer = messagebox.askyesno("Load new data ?", "Loading a file will erase all existing data currently measured. Do you wish to continue ?")
+            if answer:
+                filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])  # Ouverture d'un explorateur de fichier pour sélectionner un fichier csv à lire
+                if not filepath:
+                    return  # Termine la fonction ici si aucun fichier n'est sélectionné
+                self.data = [0] * len(self.data)  # Efface les anciennes données
+                with open(filepath, 'r') as csvfile:  # Ouverture du fichier spécifié en tant que csv
+                    csvreader = csv.reader(csvfile, delimiter=';')  # Définition du séparateur de données
+                    for row in csvreader:  # Lecture des données
+                        try:
+                            key = int(row[0])  # Lecture des canaux
+                            value = float(row[1])  # Lecture des valeurs relevées
+                            if key > 1024:
+                                print(f"Line {row} greater than limit has been ignored.")
+                                continue  # Ignore la ligne si la valeur dépasse 1024
+                            self.data[key] = self.data[key]+value  # Affectation des données dans le tableau data
+                        except (ValueError, IndexError) as e:
+                            # Log the error and continue
+                            print(f"Error processing line : {row}. IndexError: {e}")
+                            continue
+                uart_data = [0]*1024 # Création d'un tableau de données uart vide pour appeler la fonction plot uart
+                self.plot_uart_data(uart_data) # On met à jour l'affichage des données
+        else:
+            messagebox.showinfo("Configuration Error", "Frequency must be set between 1 and 50 000 Hz to display!")
 
     def save_to_csv(self, data):
         # Ouvrir une boîte de dialogue pour choisir l'emplacement de sauvegarde
@@ -255,9 +264,9 @@ class controlGRAPH(tk.Frame):
         answer = messagebox.askyesno("Clear All Data ?", "Do you really wish to remove all measured data ? Action can not be reverted.")
         if answer:
             self.data = [0] * len(self.data)
-            self.fit_erlang = 0 # Disable all fit functions
-            self.fit_poisson = 0
-            self.fit_gaussian = 0
+            self.fit_erlang = False # Disable all fit functions
+            self.fit_poisson = False
+            self.fit_gaussian = False
             self.ax.clear()
             self.ax.plot(self.data, label='Measured Data')
             self.ax.set_title('Graphic Displayer')  # Titre
@@ -403,9 +412,15 @@ class controlPIC(tk.Frame):
             if mode == "Erlang":
                 self.uart_terminal.send_data('e')
                 self.factor_menu.config(state=tk.NORMAL) # On active l'accès au facteur k
+                self.graph_control.button_exp.config(state=tk.NORMAL)
+                self.graph_control.button_gaussian.config(state=tk.DISABLED)
+                self.graph_control.button_poisson.config(state=tk.DISABLED)
             elif mode == "Poisson":
                 self.uart_terminal.send_data('p')
                 self.factor_menu.config(state=tk.DISABLED) # On desactive l'accès au facteur k
+                self.graph_control.button_gaussian.config(state=tk.NORMAL)
+                self.graph_control.button_poisson.config(state=tk.NORMAL)
+                self.graph_control.button_exp.config(state=tk.DISABLED)
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
