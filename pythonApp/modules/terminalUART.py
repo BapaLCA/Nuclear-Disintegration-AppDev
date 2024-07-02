@@ -9,19 +9,25 @@ class UARTTerminal(tk.Frame):
         super().__init__(master, *args, **kwargs)
         self.data_callback = data_callback  # Callback to notify the controller
 
+        # Configurer la grille principale pour qu'elle s'étende et redimensionne les widgets
+        self.grid(row=0, column=0, sticky="nsew")
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
         # Label for the UART terminal title
         self.labelUART = tk.Label(self, text="UART Terminal", font=("Arial", 16, "bold"), fg="blue", relief="raised")
-        self.labelUART.pack(side=tk.TOP)
+        self.labelUART.grid(row=0, column=0, columnspan=5, sticky="ew")
 
         # ScrolledText widget to display UART data
         self.text_area = scrolledtext.ScrolledText(self, wrap=tk.WORD, font=("Arial", 12))
-        self.text_area.pack(expand=True, fill=tk.BOTH)
+        self.text_area.grid(row=1, column=0, columnspan=5, sticky="nsew")
 
         # Entry and button to input and send data
         self.entry = Entry(self, font=("Arial", 12))
-        self.entry.pack(side=tk.LEFT, expand=True, fill='x')
+        self.entry.grid(row=2, column=0, columnspan=4, sticky="ew")
         self.send_button = Button(self, text="Send", command=self.send_data_entry)
-        self.send_button.pack(side=tk.RIGHT)
+        self.send_button.grid(row=2, column=4, sticky="ew")
 
         # Menu for selecting the COM port
         self.port_var = StringVar(self)
@@ -32,26 +38,26 @@ class UARTTerminal(tk.Frame):
             self.ports.append("No port available")
             self.port_var.set(self.ports[0])
         self.port_menu = OptionMenu(self, self.port_var, *self.ports)
-        self.port_menu.pack(side=tk.LEFT)
+        self.port_menu.grid(row=3, column=0, sticky="ew")
 
         # Refresh button to update the list of available ports
         self.refresh_button = Button(self, text="Refresh Ports", command=self.refresh_ports)
-        self.refresh_button.pack(side=tk.LEFT)
+        self.refresh_button.grid(row=3, column=1, sticky="ew")
 
         # Baudrate selection menu
         self.baudrate_var = StringVar(self)
         self.baudrate_var.set("9600")
         self.baudrate_options = ["9600", "19200", "38400", "57600", "115200"]
         self.baudrate_menu = OptionMenu(self, self.baudrate_var, *self.baudrate_options)
-        self.baudrate_menu.pack(side=tk.LEFT)
+        self.baudrate_menu.grid(row=3, column=2, sticky="ew")
 
         # Frame for the status label
         self.status_frame = Frame(self, bd=2, relief="groove")
-        self.status_frame.pack(side=tk.LEFT, padx=5, pady=5)
+        self.status_frame.grid(row=3, column=4, padx=5, pady=5, sticky="ew")
 
         # Status label to display the current status
         self.status_label = Label(self.status_frame, text="Status : Unknown", font=("Arial", 10), width=15, anchor='w')
-        self.status_label.pack(side=tk.BOTTOM)
+        self.status_label.pack(side=tk.BOTTOM, fill=tk.X)
 
         # Variable to track the status of the PIC
         self.status = "?"
@@ -61,6 +67,19 @@ class UARTTerminal(tk.Frame):
 
         # Array to store received data
         self.received_data = [0] * 1024
+
+        
+
+        # Configurer les lignes et colonnes de la grille pour qu'elles s'étendent avec la fenêtre
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=0)
+        self.grid_rowconfigure(3, weight=0)
+        self.grid_rowconfigure(4, weight=0)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(3, weight=1)
 
     def get_available_ports(self):
         ports = [port.device for port in list_ports.comports()]
@@ -80,9 +99,11 @@ class UARTTerminal(tk.Frame):
             self.port_var.set("No port available")
 
     def connect(self):
+        print("Button connect clicked")
         port = self.port_var.get()
         baudrate = int(self.baudrate_var.get())
         if port and port != "No port available":
+            
             self.serial_port = serial.Serial(port, baudrate, timeout=1)
             # Start the thread to read UART data
             self.read_thread = threading.Thread(target=self.read_uart)

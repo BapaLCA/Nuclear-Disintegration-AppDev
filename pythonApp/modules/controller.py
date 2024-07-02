@@ -14,21 +14,24 @@ class controller(tk.Frame):
     def __init__(self, parent, right_frame, uart_terminal):
         super().__init__(parent)
 
+        # Configurer la grille principale pour qu'elle s'étende et redimensionne les widgets
+        self.grid(row=0, column=0, sticky="nsew")
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
         # Ajout du graphique et des contrôles
         self.graph_control = controlGRAPH(self, uart_terminal)
-        self.graph_control.pack(expand=True, fill=tk.BOTH, side=tk.TOP)
+        self.graph_control.grid(row=0, column=0, sticky="nsew")
 
+        # On donne au controller l'accès au pic_control
         self.pic_control = self.graph_control.pic_control
 
-        # Ajout du conteneur de contrôle du PIC
-        #self.pic_control = controlPIC(self, uart_terminal, self.graph_control)
-        #self.pic_control.pack(expand=True, fill=tk.BOTH, side=tk.TOP)
-
-        # Bouton de connexion
-        connect_button = Button(right_frame, text="Connect", command=lambda:self.on_connect(uart_terminal, self.pic_control))
-        connect_button.pack(expand=True, fill=tk.X, side=tk.BOTTOM)
+        # Bouton de connexion dans le right_frame
+        self.connect_button = tk.Button(uart_terminal, text="Connect", command=lambda:self.on_connect(uart_terminal, self.pic_control))
+        self.connect_button.grid(row=3, column=3, sticky="ew")
 
     def on_connect(self, uart_terminal, pic_control):
+        print("on_connect")
         uart_terminal.connect() # On se connecte au port série
         pic_control.update_buttons_state() # Si le terminal est bien connecté, on rend utilisable les boutons de contrôle
         uart_terminal.send_data('?') # On demande l'état actuel du PIC (Le premier char est toujours ignoré, je ne sais pas pourquoi)
