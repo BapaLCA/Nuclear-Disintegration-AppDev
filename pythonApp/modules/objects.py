@@ -23,7 +23,7 @@ class Chronometer:
         #self.stop_button.pack(side="left", padx=20)
         
         self.reset_button = tk.Button(root, text="Reset", command=self.reset)
-        #self.reset_button.pack(side="left", padx=20)
+        self.reset_button.pack(side="right", padx=5)
 
     def start(self):
         if not self.running:

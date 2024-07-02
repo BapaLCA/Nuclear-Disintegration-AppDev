@@ -15,7 +15,7 @@ import sys
 analysis = tkinter.Tk() # Définition d'un écran
 #analysis.geometry("1280x720") # Définition de la taille de l'écran
 analysis.attributes('-fullscreen', False)
-analysis.title("Desintegrations Nucleaires") # Définition du nom de l'application
+analysis.title("Nuclear Disintegration Controller") # Définition du nom de l'application
 
 # Méthode pour basculer entre plein écran et mode fenêtré
 def toggle_fullscreen(event=None):
@@ -33,7 +33,7 @@ analysis.bind('<F11>', toggle_fullscreen)
 analysis.bind('<Escape>', end_fullscreen)
 
 # Titre de l'application
-title = Label(text="Distribution de Poisson/Erlang", font=("Arial", 16, "bold")) # Définition du titre
+title = Label(text="Nuclear Disintegration Analyzer & Controller", font=("Arial", 16, "bold")) # Définition du titre
 title.pack() # Affichage du label
 
 
@@ -59,38 +59,6 @@ def on_closing(root, terminal):
     sys.exit()
 
 ############################## Configuration des boutons et menus ##############################
-"""
-# Créer un frame principal pour le layout
-main_frame = tk.Frame(analysis, bg="red")
-main_frame.pack(expand=True, fill=tk.BOTH)
-
-# Configurer le layout pour qu'il s'étende correctement
-main_frame.columnconfigure(0, weight=1)
-main_frame.columnconfigure(1, weight=1)
-main_frame.rowconfigure(0, weight=1)
-main_frame.rowconfigure(1, weight=1)
-
-# Créer les quatre frames pour les coins de l'application
-top_left_frame = tk.Frame(main_frame, bg="blue")
-top_left_frame.grid(row=0, column=0, padx=5, pady=5)
-
-top_right_frame = tk.Frame(main_frame, bg="lightgreen")
-top_right_frame.grid(row=0, column=1, padx=5, pady=5)
-
-bottom_left_frame = tk.Frame(main_frame, bg="lightyellow")
-bottom_left_frame.grid(row=1, column=0, padx=5, pady=5)
-
-bottom_right_frame = tk.Frame(main_frame, bg="lightcoral")
-bottom_right_frame.grid(row=1, column=1, padx=5, pady=5)
-
-# Ajout du terminal UART
-terminal = UARTTerminal(top_right_frame, plot_uart_data)
-terminal.pack(expand=True, fill=tk.BOTH)
-
-# Ajout du controleur
-control = controller(top_left_frame, bottom_right_frame, terminal)
-control.pack(expand=True, fill=tk.BOTH)
-"""
 
 left_frame = tk.Frame(analysis)
 left_frame.pack(expand=True, fill=tk.BOTH, side=LEFT)

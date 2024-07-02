@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, OptionMenu, StringVar, Label, Button, Entry, messagebox, Checkbutton
+from tkinter import ttk, OptionMenu, StringVar, Label, Button, Entry, messagebox, Checkbutton, Frame
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
@@ -18,13 +18,15 @@ class controller(tk.Frame):
         self.graph_control = controlGRAPH(self, uart_terminal)
         self.graph_control.pack(expand=True, fill=tk.BOTH, side=tk.TOP)
 
+        self.pic_control = self.graph_control.pic_control
+
         # Ajout du conteneur de contrôle du PIC
-        self.pic_control = controlPIC(self, uart_terminal, self.graph_control)
-        self.pic_control.pack(expand=True, fill=tk.BOTH, side=tk.TOP)
+        #self.pic_control = controlPIC(self, uart_terminal, self.graph_control)
+        #self.pic_control.pack(expand=True, fill=tk.BOTH, side=tk.TOP)
 
         # Bouton de connexion
         connect_button = Button(right_frame, text="Connect", command=lambda:self.on_connect(uart_terminal, self.pic_control))
-        connect_button.pack(expand=True, fill=tk.X, side=tk.TOP)
+        connect_button.pack(expand=True, fill=tk.X, side=tk.BOTTOM)
 
     def on_connect(self, uart_terminal, pic_control):
         uart_terminal.connect() # On se connecte au port série
@@ -42,6 +44,7 @@ class controller(tk.Frame):
 class controlGRAPH(tk.Frame):
     def __init__(self, parent, uart_terminal):
         super().__init__(parent)
+        self.uart_terminal = uart_terminal
         self.data = [0]*1024
         self.time = [0]*1024
         self.user_input = 0
@@ -52,9 +55,17 @@ class controlGRAPH(tk.Frame):
         self.plot_uart_data(uart_terminal.received_data)
 
     def create_widgets(self):
+        # Configurer la grille pour qu'elle s'étende et redimensionne les widgets
+        self.grid(row=0, column=0, sticky="nsew")
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)
+        self.grid_columnconfigure(0, weight=1)
+
         # Conteneur pour le graphique
         self.graph_frame = tk.Frame(self, bg="blue")
         self.graph_frame.grid(row=0, column=0, sticky="nsew")
+        self.graph_frame.grid_rowconfigure(0, weight=1)
+        self.graph_frame.grid_columnconfigure(0, weight=1)
 
         self.fig, self.ax = plt.subplots(figsize=(8, 6), dpi=100)
         self.ax.set_title('Graphic Displayer')  # Titre
@@ -63,14 +74,12 @@ class controlGRAPH(tk.Frame):
         self.ax.grid(True)  # Affichage d'une grille
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
-        self.canvas.get_tk_widget().pack(expand=True, fill=tk.BOTH)
+        self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
         # Frame pour les widgets de contrôle
         self.control_frame = tk.Frame(self, bg="lightblue")
-        self.control_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
-
-        # Facteur K pour le mode Erlang
-        self.factor_k = 1 #Valeur par défaut
+        self.control_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        self.control_frame.grid_columnconfigure(0, weight=1)
 
         # Bouton pour charger un fichier CSV
         self.button_load_csv = Button(self.control_frame, text="Load Data from CSV", command=self.open_file)
@@ -126,6 +135,9 @@ class controlGRAPH(tk.Frame):
         # Bouton pour supprimer toutes les données actuellement chargées
         self.button_clear_data = Button(self.control_frame, text="Clear All Data", command=self.clear_data)
         self.button_clear_data.grid(row=1, column=4, padx=5, pady=5)
+
+        self.pic_control = controlPIC(self, self.uart_terminal, self)
+        self.pic_control.grid(row=2, column=0, padx=5, pady=5)
 
     def plot_uart_data(self, uart_data):
         print("Plot called")
@@ -264,9 +276,9 @@ class controlGRAPH(tk.Frame):
         answer = messagebox.askyesno("Clear All Data ?", "Do you really wish to remove all measured data ? Action can not be reverted.")
         if answer:
             self.data = [0] * len(self.data)
-            self.fit_erlang = False # Disable all fit functions
-            self.fit_poisson = False
-            self.fit_gaussian = False
+            #self.fit_erlang = False # Disable all fit functions
+            #self.fit_poisson = False
+            #self.fit_gaussian = False
             self.ax.clear()
             self.ax.plot(self.data, label='Measured Data')
             self.ax.set_title('Graphic Displayer')  # Titre
@@ -309,18 +321,28 @@ class controlPIC(tk.Frame):
 
         # Ajouter des labels au conteneur
         self.label1 = ttk.Label(self, text="Function Mode")
-        self.label1.grid(row=0, column=0, padx=5, pady=5)
+        self.label1.grid(row=0, column=0, padx=5, pady=5, sticky="w")
         
         self.label2 = ttk.Label(self, text="K factor")
-        self.label2.grid(row=1, column=0, padx=5, pady=5)
+        self.label2.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+
+        # Configurer la grille pour qu'elle s'étende et redimensionne les widgets
+        self.grid(row=0, column=0, sticky="nsew")
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(3, weight=1)
 
     def create_widgets(self):
         # Ajouter des boutons au conteneur
         startMeasures = ttk.Button(self, text="Start", command=self.on_startMeasures_click)
-        startMeasures.grid(row=0, column=2, padx=5, pady=5)
+        startMeasures.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
         self.buttons.append(startMeasures)
         
         stopMeasures = ttk.Button(self, text="Stop", command=lambda:self.on_stopMeasures_click(self.uart_terminal))
+        stopMeasures.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
         self.buttons.append(stopMeasures)
 
         # Selection du Mode de mesure
@@ -329,7 +351,7 @@ class controlPIC(tk.Frame):
         self.mode_options = ["Erlang", "Poisson"]
         self.mode_menu = OptionMenu(self, self.mode_var, *self.mode_options)
         self.mode_menu.config(width=7)
-        self.mode_menu.grid(row=0, column=1, padx=5, pady=5)
+        self.mode_menu.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         self.mode_var.trace_add("write", self.on_mode_select)
 
         # Création du menu déroulant pour le facteur
@@ -337,14 +359,14 @@ class controlPIC(tk.Frame):
         self.factor_var.set("-")
         self.factor_options = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         self.factor_menu = OptionMenu(self, self.factor_var, *self.factor_options)
-        self.factor_menu.grid(row=1, column=1, padx=5, pady=5)
+        self.factor_menu.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         self.factor_var.trace_add("write", self.on_factor_select)
-        self.factor_menu.config(state=tk.DISABLED) 
+        self.factor_menu.config(state=tk.DISABLED)
 
         # Chronometre
         self.frame_chrono = Frame(self, bd=2, relief="groove")
         self.chrono = Chronometer(self.frame_chrono, "Time elapsed :")
-        self.frame_chrono.grid(row=0, column=3, padx=5, pady=5)   
+        self.frame_chrono.grid(row=0, column=3, padx=5, pady=5, sticky="nsew")  
 
 
     # Commande de lancement des mesures
