@@ -74,8 +74,9 @@ control.pack(expand=True, fill=tk.BOTH, side=TOP, padx=5, pady=5)
 
 
 # Bouton pour quitter l'application
-#bclose = Button(left_frame, text="Close Application", command=(on_closing(analysis, terminal))) # Bouton pour fermer l'application
-#bclose.pack(expand=True, fill=tk.X, side=BOTTOM, pady=5)
+bclose = Button(control, text="Close Application", command=lambda:(on_closing(analysis, terminal))) # Bouton pour fermer l'application
+bclose.grid(row=1, column=0, sticky="nsew")
+
 
 
 # Loop

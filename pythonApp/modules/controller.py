@@ -65,7 +65,7 @@ class controlGRAPH(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         # Conteneur pour le graphique
-        self.graph_frame = tk.Frame(self, bg="blue")
+        self.graph_frame = tk.Frame(self, bg="lightblue")
         self.graph_frame.grid(row=0, column=0, sticky="nsew")
         self.graph_frame.grid_rowconfigure(0, weight=1)
         self.graph_frame.grid_columnconfigure(0, weight=1)
@@ -81,12 +81,17 @@ class controlGRAPH(tk.Frame):
 
         # Frame pour les widgets de contrôle
         self.control_frame = tk.Frame(self, bg="lightblue")
-        self.control_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        self.control_frame.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
         self.control_frame.grid_columnconfigure(0, weight=1)
+        self.control_frame.grid_rowconfigure(0, weight=1)
 
         # Bouton pour charger un fichier CSV
         self.button_load_csv = Button(self.control_frame, text="Load Data from CSV", command=self.open_file)
         self.button_load_csv.grid(row=0, column=0, padx=5, pady=5)
+
+        # Bouton de sauvegarde des données en fichier .csv
+        self.button_save_data = Button(self.control_frame, text="Save Data to CSV", command=lambda:self.save_to_csv(self.data))
+        self.button_save_data.grid(row=0, column=1, padx=5, pady=5)
 
         # Label pour le choix de fréquence
         self.labelfreq = Label(self.control_frame, text="Enter frequency value:")
@@ -118,10 +123,6 @@ class controlGRAPH(tk.Frame):
         self.button_exp.config(state=tk.DISABLED)
         self.button_gaussian.config(state=tk.DISABLED)
         self.button_poisson.config(state=tk.DISABLED)
-
-        # Bouton de sauvegarde des données en fichier .csv
-        self.button_save_data = Button(self.control_frame, text="Save Data to CSV", command=lambda:self.save_to_csv(self.data))
-        self.button_save_data.grid(row=0, column=1, padx=5, pady=5)
 
         # Bouton de sauvegarde des données de fit function en fichier .csv
         self.button_save_fit = Button(self.control_frame, text="Save Fit to CSV", command=self.choose_fit)
@@ -222,10 +223,14 @@ class controlGRAPH(tk.Frame):
             print("Data is null")
 
     def show_entry_value(self):
-        self.user_input = self.entry.get()
-        messagebox.showinfo("Value selected", f"Frequency value entered: {self.user_input} Hz")
-        if self.data is not None:
-            self.update_plot()
+        if "1" <= self.entry.get() <= "50000":
+            self.user_input = self.entry.get()
+            messagebox.showinfo("Value selected", f"Frequency value entered: {self.user_input} Hz")
+            if self.data is not None:
+                self.update_plot()
+        else:
+            messagebox.showinfo("Configuration error", "Frequency must be set between 1 Hz and 50 000 Hz!")
+
 
     def add_erlang_fit(self, ax, data, time, k_value, period):
         self.erlang_x, self.erlang_y = add_erlang_fit(ax, data, time, k_value, period)
@@ -279,9 +284,11 @@ class controlGRAPH(tk.Frame):
         answer = messagebox.askyesno("Clear All Data ?", "Do you really wish to remove all measured data ? Action can not be reverted.")
         if answer:
             self.data = [0] * len(self.data)
-            #self.fit_erlang = False # Disable all fit functions
-            #self.fit_poisson = False
-            #self.fit_gaussian = False
+            print(self.fit_erlang.get())
+            self.fit_erlang.set(False)
+            print(self.fit_erlang.get())
+            self.fit_poisson.set(False)
+            self.fit_gaussian.set(False)
             self.ax.clear()
             self.ax.plot(self.data, label='Measured Data')
             self.ax.set_title('Graphic Displayer')  # Titre
@@ -345,7 +352,7 @@ class controlPIC(tk.Frame):
         self.buttons.append(startMeasures)
         
         stopMeasures = ttk.Button(self, text="Stop", command=lambda:self.on_stopMeasures_click(self.uart_terminal))
-        stopMeasures.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
+        #stopMeasures.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
         self.buttons.append(stopMeasures)
 
         # Selection du Mode de mesure
@@ -385,7 +392,7 @@ class controlPIC(tk.Frame):
                         self.send_character('g')
                         self.chrono.start()
                         self.buttons[0].grid_forget()
-                        self.buttons[1].grid(row=0, column=2, padx=5, pady=5)
+                        self.buttons[1].grid(row=0, column=2, padx=5, pady=5, sticky="ew")
                         self.mode_menu.config(state=tk.DISABLED)
                         self.factor_menu.config(state=tk.DISABLED)
                     else:
@@ -397,7 +404,7 @@ class controlPIC(tk.Frame):
                     self.send_character('g')
                     self.chrono.start()
                     self.buttons[0].grid_forget()
-                    self.buttons[1].grid(row=0, column=2, padx=5, pady=5)
+                    self.buttons[1].grid(row=0, column=2, padx=5, pady=5, sticky="ew")
                     self.mode_menu.config(state=tk.DISABLED)
                 else:
                     messagebox.showinfo("Configuration error", "Frequence must be set between 1 Hz and 50 000 Hz!")
@@ -414,7 +421,7 @@ class controlPIC(tk.Frame):
             self.send_character('s')
             self.chrono.stop()
             self.buttons[1].grid_forget()
-            self.buttons[0].grid(row=0, column=2, padx=5, pady=5)
+            self.buttons[0].grid(row=0, column=2, padx=5, pady=5, sticky="ew")
             self.mode_menu.config(state=tk.NORMAL)
             self.factor_menu.config(state=tk.NORMAL)
         else:
