@@ -38,6 +38,7 @@ class UARTTerminal(tk.Frame):
             self.ports.append("No port available")
             self.port_var.set(self.ports[0])
         self.port_menu = OptionMenu(self, self.port_var, *self.ports)
+        self.port_menu.config(width=15)
         self.port_menu.grid(row=3, column=0, sticky="ew")
 
         # Refresh button to update the list of available ports
@@ -49,6 +50,7 @@ class UARTTerminal(tk.Frame):
         self.baudrate_var.set("9600")
         self.baudrate_options = ["9600", "19200", "38400", "57600", "115200"]
         self.baudrate_menu = OptionMenu(self, self.baudrate_var, *self.baudrate_options)
+        self.baudrate_menu.config(width=15)
         self.baudrate_menu.grid(row=3, column=2, sticky="ew")
 
         # Frame for the status label

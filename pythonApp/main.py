@@ -54,9 +54,11 @@ def plot_uart_data(uart_data):
 
 # Fonction de fermeture du terminal
 def on_closing(root, terminal):
-    terminal.close()
-    root.destroy()
-    sys.exit()
+    answer = messagebox.askyesno("Close Application ?", "Do you wish to close the application ? All unsaved data will be lost!")
+    if answer:
+        terminal.close()
+        root.destroy()
+        sys.exit()
 
 ############################## Configuration des boutons et menus ##############################
 

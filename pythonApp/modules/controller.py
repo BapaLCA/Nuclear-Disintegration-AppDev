@@ -29,10 +29,12 @@ class controller(tk.Frame):
         # Bouton de connexion dans le right_frame
         self.connect_button = tk.Button(uart_terminal, text="Connect", command=lambda:self.on_connect(uart_terminal, self.pic_control))
         self.connect_button.grid(row=3, column=3, sticky="ew")
+        self.connect_button.config(width=10)
 
     def on_connect(self, uart_terminal, pic_control):
-        print("on_connect")
         uart_terminal.connect() # On se connecte au port série
+        self.connect_button.config(state=tk.DISABLED)
+        self.connect_button.config(text="Connected")
         pic_control.update_buttons_state() # Si le terminal est bien connecté, on rend utilisable les boutons de contrôle
         uart_terminal.send_data('?') # On demande l'état actuel du PIC (Le premier char est toujours ignoré, je ne sais pas pourquoi)
         uart_terminal.send_data('?')
@@ -52,6 +54,7 @@ class controlGRAPH(tk.Frame):
         self.time = [0]*1024
         self.user_input = 0
         self.factor_k = 1
+        self.delay = 1
         self.mode = "-"
 
         self.create_widgets()
@@ -334,7 +337,10 @@ class controlPIC(tk.Frame):
         self.label1.grid(row=0, column=0, padx=5, pady=5, sticky="w")
         
         self.label2 = ttk.Label(self, text="K factor")
-        self.label2.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        #self.label2.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+
+        self.label3 = ttk.Label(self, text="Measure Delay")
+        #self.label3.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
         # Configurer la grille pour qu'elle s'étende et redimensionne les widgets
         self.grid(row=0, column=0, sticky="nsew")
@@ -358,7 +364,7 @@ class controlPIC(tk.Frame):
         # Selection du Mode de mesure
         self.mode_var = StringVar(self)
         self.mode_var.set("-")
-        self.mode_options = ["Erlang", "Poisson"]
+        self.mode_options = ["Erlang", "Poisson", "Piscine"]
         self.mode_menu = OptionMenu(self, self.mode_var, *self.mode_options)
         self.mode_menu.config(width=7)
         self.mode_menu.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
@@ -369,9 +375,22 @@ class controlPIC(tk.Frame):
         self.factor_var.set("-")
         self.factor_options = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         self.factor_menu = OptionMenu(self, self.factor_var, *self.factor_options)
-        self.factor_menu.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+        #self.factor_menu.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         self.factor_var.trace_add("write", self.on_factor_select)
-        self.factor_menu.config(state=tk.DISABLED)
+        #self.factor_menu.config(state=tk.DISABLED)
+
+        # Création du menu déroulant pour le Delay
+        self.delay_var = StringVar(self)
+        self.delay_var.set("-")
+        self.delay_options = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        self.delay_menu = OptionMenu(self, self.delay_var, *self.delay_options)
+        #self.delay_menu.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+        self.delay_var.trace_add("write", self.on_delay_select)
+        #self.delay_menu.config(state=tk.DISABLED)
+
+        # Invisible button to keep the Controller size stable upon mode selection
+        self.invisible_button = Button(self, borderwidth=1, height=1, width=1)
+        self.invisible_button.grid(row=1, column=1, padx=5, pady=6)
 
         # Chronometre
         self.frame_chrono = Frame(self, bd=2, relief="groove")
@@ -408,6 +427,16 @@ class controlPIC(tk.Frame):
                     self.mode_menu.config(state=tk.DISABLED)
                 else:
                     messagebox.showinfo("Configuration error", "Frequence must be set between 1 Hz and 50 000 Hz!")
+            elif mode == "Piscine":
+                if("1" <= self.delay_var.get() <= "9"):
+                    self.send_character('g')
+                    self.chrono.start()
+                    self.buttons[0].grid_forget()
+                    self.buttons[1].grid(row=0, column=2, padx=5, pady=5, sticky="ew")
+                    self.mode_menu.config(state=tk.DISABLED)
+                    self.delay_menu.config(state=tk.DISABLED)
+                else:
+                    messagebox.showinfo("Configuration error", "Measure Delay must be set!")
             else:
                 messagebox.showinfo("Configuration error", "Mode must be set!")
         else:
@@ -437,22 +466,51 @@ class controlPIC(tk.Frame):
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
+    # Commande de selection du facteur k pour le mode de mesure Erlang
+    def on_delay_select(self, *args):
+        delay = self.delay_var.get()
+        if self.uart_terminal is not None:
+            self.uart_terminal.send_data('o')
+            self.uart_terminal.send_data(delay)
+            self.graph_control.set_delay_k(delay)
+        else:
+            messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
+
     def on_mode_select(self, *args):
         mode = self.mode_var.get()
         self.graph_control.mode = mode
         if self.uart_terminal and self.uart_terminal.serial_port:
             if mode == "Erlang":
                 self.uart_terminal.send_data('e')
-                self.factor_menu.config(state=tk.NORMAL) # On active l'accès au facteur k
+                self.factor_menu.grid(row=1, column=1, padx=5, pady=5, sticky="ew") # On active l'accès au facteur k
                 self.graph_control.button_exp.config(state=tk.NORMAL)
                 self.graph_control.button_gaussian.config(state=tk.DISABLED)
                 self.graph_control.button_poisson.config(state=tk.DISABLED)
+                self.invisible_button.grid_forget()
+                self.delay_menu.grid_forget()
+                self.label3.grid_forget()
+                self.label2.grid(row=1, column=0, padx=5, pady=5, sticky="w")
             elif mode == "Poisson":
                 self.uart_terminal.send_data('p')
-                self.factor_menu.config(state=tk.DISABLED) # On desactive l'accès au facteur k
+                self.factor_menu.grid_forget() # On desactive l'accès au facteur k
                 self.graph_control.button_gaussian.config(state=tk.NORMAL)
                 self.graph_control.button_poisson.config(state=tk.NORMAL)
                 self.graph_control.button_exp.config(state=tk.DISABLED)
+                self.delay_menu.grid_forget()
+                self.label3.grid_forget()
+                self.label2.grid_forget()
+                self.invisible_button.grid(row=1, column=1, padx=5, pady=5)
+            elif mode == "Piscine":
+                self.uart_terminal.send_data('p')
+                self.factor_menu.grid_forget() # On desactive l'accès au facteur k
+                self.graph_control.button_gaussian.config(state=tk.DISABLED)
+                self.graph_control.button_poisson.config(state=tk.DISABLED)
+                self.graph_control.button_exp.config(state=tk.DISABLED)
+                self.label2.grid_forget()
+                self.label3.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+                self.factor_menu.grid_forget()
+                self.invisible_button.grid_forget()
+                self.delay_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
@@ -466,6 +524,4 @@ class controlPIC(tk.Frame):
         state = tk.NORMAL if self.uart_terminal and self.uart_terminal.serial_port else tk.DISABLED
         for button in self.buttons:
             button.config(state=state)
-        self.factor_menu.config(state=state)
-        self.factor_menu.config(state=tk.DISABLED)
         self.mode_menu.config(state=state)
