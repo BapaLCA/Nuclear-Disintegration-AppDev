@@ -39,7 +39,7 @@
 
 // Variables globales //
 
-volatile int mode=0; // Defini le mode de mesure / 0 : Erlang / 1 : Poisson
+volatile int mode=0; // Defini le mode de mesure / 0 : Erlang / 1 : Poisson / 2 : Piscine
 volatile int k=1; // Nombre d'impulsions a mesurer avant l'arret du compteur (Minimum 1)
 volatile int exitloop = 0; //Pour sortir de la boucle principale
 volatile unsigned int prevrc0 = 1; // etat precedent de RC0 pour detection de front
@@ -93,10 +93,17 @@ void interrupt(void) {
                 case 'p':  // Commande POISSON pour selectionner le mode de mesure Poisson
                     mode = 1;
                     break;
+                case 'o': // Commande POOL pour selectionner le mode de mesure Piscine
+                    mode = 2;
+                    break;
                 case '?': // Commande pour envoyer l'etat actuel du PIC18F4550
                     send_state(flagProcess);
                     UART_send_data(0x0D); // Saut de ligne
                     UART_send_data(0x0A);
+                    break;
+                case 'u': // Commande du mode Piscine pour indiquer la fin d'une mesure
+                    flagWrite = 1; // On indique au PIC la fin du temps d'une mesure
+                    break;
                 default:
                     // Aucune correspondance, on ignore la/les données reçues
                     break;
@@ -127,6 +134,10 @@ void interrupt(void) {
 
         if(mode==1){ //Poisson
                 Counting(); // Comptage du nombre d'impulsion sur cpt lors de la detection d'une impulsion
+            }
+
+        if(mode==2){ // Piscine
+            cpt++; // On compte le nombre d'impulsions, pas de limite de comptage dans ce mode
             }
 
 
@@ -209,12 +220,23 @@ void main() {
                           flagWrite = 1; // On active le flag d'ecriture des donnees
                           }
                 }
+                
+                if(mode==2){ // Piscine
+                    flagStart=1; // Pas de traitement d'entree secondaire dans ce mode
+                    }
 
-                // Partie commune aux deux modes //
+
+                // Partie commune aux trois modes //
 
                 if(flagWrite==1){ // Pour l'envoie des donnees
-                    send_data(); // Envoie les donnees vers le terminal
-                    init_cpt_data();
+                    if(mode<=1){ // Envoie des donnees sous forme de tableau pour le mode Erlang/Poisson
+                        send_data(); // Envoie les donnees vers le terminal
+                        init_cpt_data();
+                        }
+                    if(mode==2){ // Envoie des donnees sous forme de ligne singuliere pour le mode Piscine
+                        send_data_pool(); // Envoie des donnees vers le terminal
+                        cpt=0; // Reset du compteur uniquement, le tableau cpt_data n'etant pas utilise en mode Piscine
+                        }
                     flagWrite=0;
                     INTCON |= 0b11001000; // Reactive toutes les interruptions
                     }

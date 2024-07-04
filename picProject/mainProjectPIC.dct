@@ -745,6 +745,7 @@ lvv3
 lvv3_bit
 main
 max
+measurecount
 memchr
 memcmp
 memcpy
@@ -1087,6 +1088,7 @@ se0_bit
 sen
 sen_bit
 send_data
+send_data_pool
 send_state
 sendb
 sendb_bit

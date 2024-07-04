@@ -152,6 +152,7 @@ volatile int flagStart = 0;
 volatile int flagProcess = 0;
 volatile int cpt = 0;
 volatile unsigned int prevrb7 = 1;
+volatile int measureCount = 0;
 
 
 
@@ -187,6 +188,24 @@ void send_data() {
  UART_Write('m');
  UART_Write(0x0D);
  UART_Write(0x0A);
+}
+
+void send_data_pool() {
+ UART_Write('w');
+ UART_Write(0x0D);
+ UART_Write(0x0A);
+ UART_send_long_int(measureCount);
+ UART_Write(';');
+ UART_send_int(cpt);
+ UART_Write(0x0D);
+ UART_Write(0x0A);
+ UART_Write('d');
+ UART_Write(0x0D);
+ UART_Write(0x0A);
+ UART_Write('m');
+ UART_Write(0x0D);
+ UART_Write(0x0A);
+ measureCount++;
 }
 
 
@@ -319,10 +338,17 @@ void interrupt(void) {
  case 'p':
  mode = 1;
  break;
+ case 'o':
+ mode = 2;
+ break;
  case '?':
  send_state(flagProcess);
  UART_send_data(0x0D);
  UART_send_data(0x0A);
+ break;
+ case 'u':
+ flagWrite = 1;
+ break;
  default:
 
  break;
@@ -353,6 +379,10 @@ void interrupt(void) {
 
  if(mode==1){
  Counting();
+ }
+
+ if(mode==2){
+ cpt++;
  }
 
 
@@ -436,11 +466,22 @@ void main() {
  }
  }
 
+ if(mode==2){
+ flagStart=1;
+ }
+
+
 
 
  if(flagWrite==1){
+ if(mode<=1){
  send_data();
  init_cpt_data();
+ }
+ if(mode==2){
+ send_data_pool();
+ cpt=0;
+ }
  flagWrite=0;
  INTCON |= 0b11001000;
  }

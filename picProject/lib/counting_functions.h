@@ -10,6 +10,7 @@ volatile int flagStart = 0; //Flag pour l'activation du comptage
 volatile int flagProcess = 0; //Flag pour le demarrage/arret des mesures
 volatile int cpt = 0; //Variable de comtpage
 volatile unsigned int prevrb7 = 1; // etat precedent de RB4 pour detection de front
+volatile int measureCount = 0; // Variable de comptage de nombre de mesures effectuees en mode Piscine
 
 // Fonctions //
 
@@ -45,6 +46,24 @@ void send_data() {
     UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
     UART_Write(0x0D);
     UART_Write(0x0A);
+}
+
+void send_data_pool() {
+    UART_Write('w'); // On envoie une commande indiquant l'etat "Writing data" a l'app
+    UART_Write(0x0D);
+    UART_Write(0x0A);
+    UART_send_long_int(measureCount);
+    UART_Write(';');
+    UART_send_int(cpt);
+    UART_Write(0x0D);
+    UART_Write(0x0A);
+    UART_Write('d'); // On envoie une commande indiquant l'etat "Done Writing Data" a l'app
+    UART_Write(0x0D);
+    UART_Write(0x0A);
+    UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
+    UART_Write(0x0D);
+    UART_Write(0x0A);
+    measureCount++;
 }
 
 // Initialise toutes les cellules du compteur a 0

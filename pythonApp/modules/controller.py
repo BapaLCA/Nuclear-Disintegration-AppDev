@@ -501,7 +501,7 @@ class controlPIC(tk.Frame):
                 self.label2.grid_forget()
                 self.invisible_button.grid(row=1, column=1, padx=5, pady=5)
             elif mode == "Piscine":
-                self.uart_terminal.send_data('p')
+                self.uart_terminal.send_data('o')
                 self.factor_menu.grid_forget() # On desactive l'accès au facteur k
                 self.graph_control.button_gaussian.config(state=tk.DISABLED)
                 self.graph_control.button_poisson.config(state=tk.DISABLED)
