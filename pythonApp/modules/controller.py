@@ -155,6 +155,9 @@ class controlGRAPH(tk.Frame):
     def set_factor_k(self, value):
         self.factor_k = int(value)
 
+    def set_delay(self, value):
+        self.delay = int(value)
+
     def update_plot(self):
         if self.data is not None:
             print("Update plot called")
@@ -194,6 +197,35 @@ class controlGRAPH(tk.Frame):
                     self.canvas.draw()
                 else:
                     print("All data values are zero")
+            elif self.mode == "Piscine":
+                # Rescaling
+                period = 10
+                self.time = np.arange(0, len(self.data) * period, period)
+                # Filtrer les indices des valeurs non nulles dans self.data
+                non_zero_indices = [i for i, value in enumerate(self.data) if value != 0]
+                
+                if non_zero_indices:
+                    # Ajuster les limites de l'axe x pour zoomer sur les valeurs non nulles
+                    min_index = min(non_zero_indices)
+                    max_index = max(non_zero_indices)
+                    
+                    self.ax.clear()
+                    self.ax.plot(self.time, self.data, label='Measured Data')
+                    self.ax.set_title(f"Number of atom disintegrations measured VS Time elapsed")  # Titre
+                    self.ax.set_xlabel('Time (seconds)')  # Abscisse
+                    self.ax.set_ylabel('Number of disintegrations')  # Ordonnée
+                    self.ax.grid(True)  # Affichage d'une grille
+                    
+                    if self.fit_erlang.get():
+                        print("No Erlang fit on Pool mode")
+                    if self.fit_gaussian.get():
+                        print("No Gaussian fit on Pool mode")
+                    if self.fit_poisson.get():
+                        print("No Poisson fit on Pool mode")
+                    
+                    self.ax.set_xlim(self.time[min_index], self.time[max_index])
+                    self.ax.legend()
+                    self.canvas.draw()
             else:
                 print("Default mode detected")
                 # Filtrer les indices des valeurs non nulles
@@ -394,7 +426,7 @@ class controlPIC(tk.Frame):
 
         # Chronometre
         self.frame_chrono = Frame(self, bd=2, relief="groove")
-        self.chrono = Chronometer(self.frame_chrono, "Time elapsed :")
+        self.chrono = Chronometer(self.frame_chrono, "Time elapsed :", self.update_pool_data)
         self.frame_chrono.grid(row=0, column=3, padx=5, pady=5, sticky="nsew")  
 
 
@@ -472,7 +504,7 @@ class controlPIC(tk.Frame):
         if self.uart_terminal is not None:
             self.uart_terminal.send_data('o')
             self.uart_terminal.send_data(delay)
-            self.graph_control.set_delay_k(delay)
+            self.graph_control.set_delay(delay)
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
@@ -490,6 +522,7 @@ class controlPIC(tk.Frame):
                 self.delay_menu.grid_forget()
                 self.label3.grid_forget()
                 self.label2.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+                self.chrono.mode = "-"
             elif mode == "Poisson":
                 self.uart_terminal.send_data('p')
                 self.factor_menu.grid_forget() # On desactive l'accès au facteur k
@@ -500,6 +533,7 @@ class controlPIC(tk.Frame):
                 self.label3.grid_forget()
                 self.label2.grid_forget()
                 self.invisible_button.grid(row=1, column=1, padx=5, pady=5)
+                self.chrono.mode = "-"
             elif mode == "Piscine":
                 self.uart_terminal.send_data('o')
                 self.factor_menu.grid_forget() # On desactive l'accès au facteur k
@@ -511,6 +545,7 @@ class controlPIC(tk.Frame):
                 self.factor_menu.grid_forget()
                 self.invisible_button.grid_forget()
                 self.delay_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
+                self.chrono.mode = "Piscine"
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
@@ -519,6 +554,9 @@ class controlPIC(tk.Frame):
             self.uart_terminal.send_data(char)
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not connected!")
+    
+    def update_pool_data(self):
+        self.send_character("u")
 
     def update_buttons_state(self):
         state = tk.NORMAL if self.uart_terminal and self.uart_terminal.serial_port else tk.DISABLED

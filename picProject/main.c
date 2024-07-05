@@ -104,6 +104,9 @@ void interrupt(void) {
                 case 'u': // Commande du mode Piscine pour indiquer la fin d'une mesure
                     flagWrite = 1; // On indique au PIC la fin du temps d'une mesure
                     break;
+                case 'r': // Commande du mode Piscine pour reset le compteur de mesures
+                    measureCount=0;
+                    break;
                 default:
                     // Aucune correspondance, on ignore la/les données reçues
                     break;

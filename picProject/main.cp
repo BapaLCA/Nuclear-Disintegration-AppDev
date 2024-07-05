@@ -349,6 +349,9 @@ void interrupt(void) {
  case 'u':
  flagWrite = 1;
  break;
+ case 'r':
+ measureCount=0;
+ break;
  default:
 
  break;

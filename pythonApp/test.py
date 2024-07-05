@@ -1,14 +1,11 @@
 import tkinter as tk
-from threading import Thread
 import time
-from tkinter import simpledialog
 
 class Chronometer:
     def __init__(self, root, text, callback=None):
         self.root = root
         self.text = text
-        self.mode = "-"
-        self.callback = callback #fonction de rappel
+        self.callback = callback  # Ajout de la fonction de rappel
         
         self.running = False
         self.start_time = 0
@@ -21,10 +18,10 @@ class Chronometer:
         self.time_label.pack(side=tk.LEFT, padx=1, pady=2)
         
         self.start_button = tk.Button(root, text="Start", command=self.start)
-        #self.start_button.pack(side=tk.LEFT, padx=5)
+        self.start_button.pack(side=tk.LEFT, padx=5)
         
         self.stop_button = tk.Button(root, text="Stop", command=self.stop)
-        #self.stop_button.pack(side=tk.LEFT, padx=5)
+        self.stop_button.pack(side=tk.LEFT, padx=5)
         
         self.reset_button = tk.Button(root, text="Reset", command=self.reset)
         self.reset_button.pack(side=tk.RIGHT, padx=5)
@@ -61,49 +58,20 @@ class Chronometer:
             # Vérifier si un multiple de 10 secondes s'est écoulé et appeler le callback si défini
             if elapsed_seconds % 10 == 0 and elapsed_seconds != self.last_notified_second:
                 self.last_notified_second = elapsed_seconds
-                print("10 seconds elapsed")
-                print(self.mode)
-                if self.callback and self.mode == "Piscine":
-                    print("Pool update detected")
+                if self.callback and self.mode.get() == "Piscine":
                     self.callback()
                 
         self.root.after(50, self.update_clock)  # Mettre à jour toutes les 50 ms
 
-
-
-class CustomDialog(simpledialog.Dialog):
-    def __init__(self, parent, title=None, show_choice1=False, show_choice2=False, show_choice3=False):
-        self.show_choice1 = show_choice1
-        self.show_choice2 = show_choice2
-        self.show_choice3 = show_choice3
-        super().__init__(parent, title=title)
-    
-    def body(self, master):
-        tk.Label(master, text="Select which fit function you wish to save:").pack(pady=10)
+# Exemple de classe Controller
+class Controller:
+    def __init__(self, root):
+        self.chronometer = Chronometer(root, "Chrono", self.ten_seconds_elapsed)
         
-        self.choice = None
-        self.button1 = tk.Button(master, text="Erlang", command=lambda: self.set_choice("Erlang"))
-        self.button2 = tk.Button(master, text="Gaussian", command=lambda: self.set_choice("Gaussian"))
-        self.button3 = tk.Button(master, text="Poisson", command=lambda: self.set_choice("Poisson"))
-        # Créez des boutons pour les trois choix
-        if self.show_choice1==True:
-            
-            self.button1.pack(side=tk.LEFT, padx=5, expand=True)
-        
-        if self.show_choice2==True:
-            
-            self.button2.pack(side=tk.LEFT, padx=5, expand=True)
-        
-        if self.show_choice3==True:
-            
-            self.button3.pack(side=tk.LEFT, padx=5, expand=True)
-        
-        return self.button1 if self.show_choice1 else (self.button2 if self.show_choice2 else self.button3)
+    def ten_seconds_elapsed(self):
+        print("10 secondes se sont écoulées")
 
-
-    def set_choice(self, choice):
-        self.choice = choice
-        self.destroy()  # Ferme la boîte de dialogue
-
-    def apply(self):
-        self.result = self.choice
+if __name__ == "__main__":
+    root = tk.Tk()
+    controller = Controller(root)
+    root.mainloop()
