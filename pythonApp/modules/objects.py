@@ -9,6 +9,7 @@ class Chronometer:
         self.text = text
         self.mode = "-"
         self.callback = callback #fonction de rappel
+        self.update_time = 10
         
         self.running = False
         self.start_time = 0
@@ -59,12 +60,9 @@ class Chronometer:
             self.time_label.config(text=f"{hours:02}:{minutes:02}:{seconds:02}")
             
             # Vérifier si un multiple de 10 secondes s'est écoulé et appeler le callback si défini
-            if elapsed_seconds % 10 == 0 and elapsed_seconds != self.last_notified_second:
+            if elapsed_seconds % self.update_time == 0 and elapsed_seconds != self.last_notified_second:
                 self.last_notified_second = elapsed_seconds
-                print("10 seconds elapsed")
-                print(self.mode)
                 if self.callback and self.mode == "Piscine":
-                    print("Pool update detected")
                     self.callback()
                 
         self.root.after(50, self.update_clock)  # Mettre à jour toutes les 50 ms

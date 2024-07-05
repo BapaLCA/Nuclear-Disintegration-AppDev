@@ -54,7 +54,7 @@ class controlGRAPH(tk.Frame):
         self.time = [0]*1024
         self.user_input = 0
         self.factor_k = 1
-        self.delay = 1
+        self.delay = 10
         self.mode = "-"
 
         self.create_widgets()
@@ -82,32 +82,41 @@ class controlGRAPH(tk.Frame):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
-        # Frame pour les widgets de contrôle
+        # Conteneur pour les widgets de contrôle
         self.control_frame = tk.Frame(self, bg="lightblue")
-        self.control_frame.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
-        self.control_frame.grid_columnconfigure(0, weight=1)
+        self.control_frame.grid(row=1, column=0, sticky="ew")
         self.control_frame.grid_rowconfigure(0, weight=1)
+        self.control_frame.grid_rowconfigure(1, weight=1)
+        self.control_frame.grid_columnconfigure(0, weight=1)
+        self.control_frame.grid_columnconfigure(1, weight=1)
+        self.control_frame.grid_columnconfigure(2, weight=1)
+        self.control_frame.grid_columnconfigure(3, weight=1)
 
         # Bouton pour charger un fichier CSV
         self.button_load_csv = Button(self.control_frame, text="Load Data from CSV", command=self.open_file)
-        self.button_load_csv.grid(row=0, column=0, padx=5, pady=5)
+        self.button_load_csv.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         # Bouton de sauvegarde des données en fichier .csv
         self.button_save_data = Button(self.control_frame, text="Save Data to CSV", command=lambda:self.save_to_csv(self.data))
-        self.button_save_data.grid(row=0, column=1, padx=5, pady=5)
+        self.button_save_data.grid(row=0, column=1, padx=5, pady=5, sticky="w")
 
+        # Conteneur pour les widgets de choix de la fréquence
+        self.frame_freq = tk.Frame(self.control_frame, bd=2, bg="lightblue", relief="ridge")
+        self.frame_freq.grid(row=0, column=2, sticky="w")
+        self.frame_freq.grid_rowconfigure(0, weight=1)
+        self.frame_freq.grid_columnconfigure(0, weight=1)
+        self.frame_freq.grid_columnconfigure(1, weight=1)
+        self.frame_freq.grid_columnconfigure(2, weight=1)
         # Label pour le choix de fréquence
-        self.labelfreq = Label(self.control_frame, text="Enter frequency value:")
-        self.labelfreq.grid(row=0, column=2, padx=5, pady=5)
-
+        self.labelfreq = Label(self.frame_freq, text="Enter frequency value:", relief="groove",font=("Arial", 10), width=16, anchor='w')
+        self.labelfreq.grid(row=0, column=0, padx=0, pady=0, sticky="w")
         # Zone de texte (Entry)
-        self.entry = Entry(self.control_frame, width=20)
-        self.entry.grid(row=0, column=3, padx=5, pady=5)
+        self.entry = Entry(self.frame_freq, width=20)
+        self.entry.grid(row=0, column=1, padx=0, pady=0, sticky="w")
         self.entry.insert(0, "0")
-
         # Bouton pour récupérer la valeur saisie
-        self.button_confirm = Button(self.control_frame, text="Confirm", command=self.show_entry_value)
-        self.button_confirm.grid(row=0, column=4, padx=5, pady=5)
+        self.button_confirm = Button(self.frame_freq, text="Confirm", command=self.show_entry_value)
+        self.button_confirm.grid(row=0, column=2, padx=0, pady=5, sticky="w")
 
         # Variable pour les checkboxes
         self.fit_erlang = tk.BooleanVar()
@@ -116,11 +125,11 @@ class controlGRAPH(tk.Frame):
 
         # Checkboxes pour tracer Erlang, Gaussienne ou/et Poisson
         self.button_exp = Checkbutton(self.control_frame, text="Add Erlang Fit", variable=self.fit_erlang, command=self.update_plot)
-        self.button_exp.grid(row=1, column=0, padx=5, pady=5)
+        self.button_exp.grid(row=1, column=0, padx=5, pady=5, sticky="w")
         self.button_gaussian = Checkbutton(self.control_frame, text="Add Gaussian Fit", variable=self.fit_gaussian, command=self.update_plot)
-        self.button_gaussian.grid(row=1, column=1, padx=5, pady=5)
+        self.button_gaussian.grid(row=1, column=1, padx=5, pady=5, sticky="w")
         self.button_poisson = Checkbutton(self.control_frame, text="Add Poisson Fit", variable=self.fit_poisson, command=self.update_plot)
-        self.button_poisson.grid(row=1, column=2, padx=5, pady=5)
+        self.button_poisson.grid(row=1, column=2, padx=5, pady=5, sticky="w")
 
         # Disable fit buttons until mode is set
         self.button_exp.config(state=tk.DISABLED)
@@ -129,7 +138,7 @@ class controlGRAPH(tk.Frame):
 
         # Bouton de sauvegarde des données de fit function en fichier .csv
         self.button_save_fit = Button(self.control_frame, text="Save Fit to CSV", command=self.choose_fit)
-        self.button_save_fit.grid(row=1,column=3,padx=5,pady=5)
+        self.button_save_fit.grid(row=1,column=3,padx=5,pady=5, sticky="w")
 
         # Données récupérées des fonctions fit
         self.erlang_x = 0
@@ -141,7 +150,7 @@ class controlGRAPH(tk.Frame):
 
         # Bouton pour supprimer toutes les données actuellement chargées
         self.button_clear_data = Button(self.control_frame, text="Clear All Data", command=self.clear_data)
-        self.button_clear_data.grid(row=1, column=4, padx=5, pady=5)
+        self.button_clear_data.grid(row=1, column=4, padx=5, pady=5, sticky="w")
 
         self.pic_control = controlPIC(self, self.uart_terminal, self)
         self.pic_control.grid(row=2, column=0, padx=5, pady=5)
@@ -149,8 +158,12 @@ class controlGRAPH(tk.Frame):
     def plot_uart_data(self, uart_data):
         print("Plot called")
         self.data = np.add(self.data, uart_data)
-        uart_data = [0] * len(uart_data)
+        self.reset_tab(uart_data)
         self.update_plot()
+
+    def reset_tab(self, tab):
+        for i in range(len(tab)):
+            tab[i]=0
 
     def set_factor_k(self, value):
         self.factor_k = int(value)
@@ -318,6 +331,7 @@ class controlGRAPH(tk.Frame):
     def clear_data(self):
         answer = messagebox.askyesno("Clear All Data ?", "Do you really wish to remove all measured data ? Action can not be reverted.")
         if answer:
+            self.reset_tab(self.data)
             self.data = [0] * len(self.data)
             print(self.fit_erlang.get())
             self.fit_erlang.set(False)
@@ -414,20 +428,24 @@ class controlPIC(tk.Frame):
         # Création du menu déroulant pour le Delay
         self.delay_var = StringVar(self)
         self.delay_var.set("-")
-        self.delay_options = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        self.delay_options = ["1", "3", "5", "10", "15", "20"]
         self.delay_menu = OptionMenu(self, self.delay_var, *self.delay_options)
         #self.delay_menu.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         self.delay_var.trace_add("write", self.on_delay_select)
         #self.delay_menu.config(state=tk.DISABLED)
 
+        # Bouton pour reset le nombre de mesures du mode piscine
+        self.reset_pool_button = Button(self, text="Reset Pool Count", command=self.reset_pool_count)
+
         # Invisible button to keep the Controller size stable upon mode selection
         self.invisible_button = Button(self, borderwidth=1, height=1, width=1)
-        self.invisible_button.grid(row=1, column=1, padx=5, pady=6)
+        #self.invisible_button.grid(row=1, column=1, padx=5, pady=6)
 
         # Chronometre
         self.frame_chrono = Frame(self, bd=2, relief="groove")
         self.chrono = Chronometer(self.frame_chrono, "Time elapsed :", self.update_pool_data)
-        self.frame_chrono.grid(row=0, column=3, padx=5, pady=5, sticky="nsew")  
+        self.frame_chrono.grid(row=0, column=3, padx=5, pady=5, sticky="nsew")
+  
 
 
     # Commande de lancement des mesures
@@ -467,6 +485,7 @@ class controlPIC(tk.Frame):
                     self.buttons[1].grid(row=0, column=2, padx=5, pady=5, sticky="ew")
                     self.mode_menu.config(state=tk.DISABLED)
                     self.delay_menu.config(state=tk.DISABLED)
+                    self.reset_pool_button.config(state=tk.DISABLED)
                 else:
                     messagebox.showinfo("Configuration error", "Measure Delay must be set!")
             else:
@@ -485,6 +504,8 @@ class controlPIC(tk.Frame):
             self.buttons[0].grid(row=0, column=2, padx=5, pady=5, sticky="ew")
             self.mode_menu.config(state=tk.NORMAL)
             self.factor_menu.config(state=tk.NORMAL)
+            self.delay_menu.config(state=tk.NORMAL)
+            self.reset_pool_button.config(state=tk.NORMAL)
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
@@ -505,6 +526,7 @@ class controlPIC(tk.Frame):
             self.uart_terminal.send_data('o')
             self.uart_terminal.send_data(delay)
             self.graph_control.set_delay(delay)
+            self.chrono.update_time = int(delay)
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
@@ -518,7 +540,7 @@ class controlPIC(tk.Frame):
                 self.graph_control.button_exp.config(state=tk.NORMAL)
                 self.graph_control.button_gaussian.config(state=tk.DISABLED)
                 self.graph_control.button_poisson.config(state=tk.DISABLED)
-                self.invisible_button.grid_forget()
+                self.reset_pool_button.grid_forget()
                 self.delay_menu.grid_forget()
                 self.label3.grid_forget()
                 self.label2.grid(row=1, column=0, padx=5, pady=5, sticky="w")
@@ -532,7 +554,7 @@ class controlPIC(tk.Frame):
                 self.delay_menu.grid_forget()
                 self.label3.grid_forget()
                 self.label2.grid_forget()
-                self.invisible_button.grid(row=1, column=1, padx=5, pady=5)
+                self.reset_pool_button.grid_forget()
                 self.chrono.mode = "-"
             elif mode == "Piscine":
                 self.uart_terminal.send_data('o')
@@ -543,9 +565,10 @@ class controlPIC(tk.Frame):
                 self.label2.grid_forget()
                 self.label3.grid(row=1, column=0, padx=5, pady=5, sticky="w")
                 self.factor_menu.grid_forget()
-                self.invisible_button.grid_forget()
+                self.reset_pool_button.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
                 self.delay_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
                 self.chrono.mode = "Piscine"
+                self.reset_pool_count()
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")
 
@@ -563,3 +586,6 @@ class controlPIC(tk.Frame):
         for button in self.buttons:
             button.config(state=state)
         self.mode_menu.config(state=state)
+
+    def reset_pool_count(self):
+        self.send_character('r')

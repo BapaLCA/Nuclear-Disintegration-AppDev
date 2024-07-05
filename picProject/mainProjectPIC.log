@@ -1,8 +1,8 @@
 0	1	mikroCPIC1618.exe -MSF -DBG -pP18F4550 -DL -O11111114 -fo48 -N"C:\Users\romai\Documents\18F4550\Nuclear-Disintegration AppDev\picProject\mainProjectPIC.mcppi" -SP"C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for PIC\Defs\" -SP"C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for PIC\uses\P18\" -SP"C:\Users\romai\Documents\18F4550\Nuclear-Disintegration AppDev\picProject\" -SP"C:\Users\romai\Documents\18F4550\" -IP"C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for PIC\uses\P18\" "main.c" "__Lib_Math.mcl" "__Lib_MathDouble.mcl" "__Lib_System.mcl" "__Lib_Delays.mcl" "__Lib_CString.mcl" "__Lib_Conversions.mcl" "__Lib_ADC_A_D.mcl" "__Lib_UART_c67.mcl"	 
 diagnostics: 0	122	Compilation Started	uart_functions.h
 diagnostics: 274	123	Compiled Successfully	main.c
-diagnostics: 0	127	All files Compiled in 141 ms	 
+diagnostics: 0	127	All files Compiled in 172 ms	 
 diagnostics: 0	125	Project Linked Successfully	mainProjectPIC.mcppi
-diagnostics: 0	128	Linked in 62 ms	 
-diagnostics: 0	129	Project 'mainProjectPIC.mcppi' completed: 391 ms	 
-diagnostics: 0	103	Finished successfully: 05 juil. 2024, 13:27:38	mainProjectPIC.mcppi
+diagnostics: 0	128	Linked in 63 ms	 
+diagnostics: 0	129	Project 'mainProjectPIC.mcppi' completed: 438 ms	 
+diagnostics: 0	103	Finished successfully: 05 juil. 2024, 16:16:51	mainProjectPIC.mcppi
