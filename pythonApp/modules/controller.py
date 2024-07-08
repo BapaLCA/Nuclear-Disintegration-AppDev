@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
 from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_fit
+from modules.plotManaging import *
 import numpy as np
 import time
 import csv
@@ -212,7 +213,7 @@ class controlGRAPH(tk.Frame):
                     print("All data values are zero")
             elif self.mode == "Piscine":
                 # Rescaling
-                period = 10
+                period = self.delay
                 self.time = np.arange(0, len(self.data) * period, period)
                 # Filtrer les indices des valeurs non nulles dans self.data
                 non_zero_indices = [i for i, value in enumerate(self.data) if value != 0]
@@ -522,6 +523,7 @@ class controlPIC(tk.Frame):
     # Commande de selection du facteur k pour le mode de mesure Erlang
     def on_delay_select(self, *args):
         delay = self.delay_var.get()
+        self.graph_control.delay = delay
         if self.uart_terminal is not None:
             self.uart_terminal.send_data('o')
             self.uart_terminal.send_data(delay)

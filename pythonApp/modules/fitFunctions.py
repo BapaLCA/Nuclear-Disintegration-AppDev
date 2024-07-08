@@ -16,25 +16,31 @@ def add_erlang_fit(ax, data, time, k_value, period):
     try:
         # Limiter les valeurs x à la longueur des données
         keys = keys[keys <= len(data) * period]
-        
-        # Ajustement de la courbe d'Erlang aux données
-        popt, _ = curve_fit(lambda x, A, lambd: erlang_pdf(x, A, k_value, lambd), keys, values, p0=[max(values), 0.1])
-        
+
+        # Normaliser les clés pour éviter des valeurs de lambd trop petites
+        scaling_factor = 1000  # Exemple de facteur de mise à l'échelle
+        keys_normalized = keys / scaling_factor
+
+        # Ajustement de la courbe d'Erlang aux données avec des limites pour lambd
+        popt, _ = curve_fit(lambda x, A, lambd: erlang_pdf(x, A, k_value, lambd), keys_normalized, values, p0=[max(values), 0.1], bounds=(0, [np.inf, 1]))
+
         # Récupération des paramètres optimaux (lambd seulement, k est connu)
         A_optimal, lambd_optimal = popt
-        
+        lambd_optimal /= scaling_factor  # Remettre lambd à l'échelle d'origine
+
         # Générer des points pour l'axe x
         x_data = np.linspace(min(keys), min(len(data) * period, max(keys)), 1000)
-        
+
         # Calculer les valeurs de la fonction d'Erlang
         y_data = erlang_pdf(x_data, A_optimal, k_value, lambd_optimal)
-        
+
         # Tracé des données expérimentales et de l'ajustement de la courbe d'Erlang
         ax.plot(x_data, y_data, color='red', linewidth=2, label=f'Erlang Fit (k={k_value}, λ={lambd_optimal:.6f}, A={round(A_optimal, 2)})')
     except RuntimeError as e:
         print(f"Erreur d'ajustement pour k={k_value}: {e}")
     except Exception as e:
         print(f"Erreur inattendue: {e}")
+
     return x_data, y_data
 
 def gauss(x, a, x0, sigma):
