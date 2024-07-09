@@ -11,14 +11,14 @@ def add_erlang_fit(ax, data, time, k_value, period):
     # Fonction pour l'affichage de l'exponentielle correspondant à la distribution d'Erlang.
     print(data)
     values = data
-    keys = time  # Utilisez self.time ici 
+    keys = time  # Utilisez self.time ici
 
     try:
         # Limiter les valeurs x à la longueur des données
         keys = keys[keys <= len(data) * period]
 
         # Normaliser les clés pour éviter des valeurs de lambd trop petites
-        scaling_factor = 1000  # Exemple de facteur de mise à l'échelle
+        scaling_factor = 1  # Exemple de facteur de mise à l'échelle
         keys_normalized = keys / scaling_factor
 
         # Ajustement de la courbe d'Erlang aux données avec des limites pour lambd
