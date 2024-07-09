@@ -3,8 +3,8 @@ from tkinter import ttk, OptionMenu, StringVar, Label, Button, Entry, messagebox
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
-from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_fit
-from modules.plotManaging import update_plot
+from modules.plotManaging import update_plot, clear_data
+from modules.fileManaging import open_file, save_to_csv
 import numpy as np
 import time
 import csv
@@ -82,7 +82,7 @@ class controlGRAPH(tk.Frame):
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
-
+        
         # Conteneur pour les widgets de contrôle
         self.control_frame = tk.Frame(self, bg="lightblue")
         self.control_frame.grid(row=1, column=0, sticky="ew")
@@ -92,14 +92,6 @@ class controlGRAPH(tk.Frame):
         self.control_frame.grid_columnconfigure(1, weight=1)
         self.control_frame.grid_columnconfigure(2, weight=1)
         self.control_frame.grid_columnconfigure(3, weight=1)
-
-        # Bouton pour charger un fichier CSV
-        self.button_load_csv = Button(self.control_frame, text="Load Data from CSV", command=self.open_file)
-        self.button_load_csv.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-
-        # Bouton de sauvegarde des données en fichier .csv
-        self.button_save_data = Button(self.control_frame, text="Save Data to CSV", command=lambda:self.save_to_csv(self.data))
-        self.button_save_data.grid(row=0, column=1, padx=5, pady=5, sticky="w")
 
         # Conteneur pour les widgets de choix de la fréquence
         self.frame_freq = tk.Frame(self.control_frame, bd=2, bg="lightblue", relief="ridge")
@@ -118,6 +110,14 @@ class controlGRAPH(tk.Frame):
         # Bouton pour récupérer la valeur saisie
         self.button_confirm = Button(self.frame_freq, text="Confirm", command=self.show_entry_value)
         self.button_confirm.grid(row=0, column=2, padx=0, pady=5, sticky="w")
+
+        # Bouton pour charger un fichier CSV
+        self.button_load_csv = Button(self.control_frame, text="Load Data from CSV", command=lambda:open_file(self))
+        self.button_load_csv.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+
+        # Bouton de sauvegarde des données en fichier .csv
+        self.button_save_data = Button(self.control_frame, text="Save Data to CSV", command=lambda:save_to_csv(self.data))
+        self.button_save_data.grid(row=0, column=1, padx=5, pady=5, sticky="w")
 
         # Variable pour les checkboxes
         self.fit_erlang = tk.BooleanVar()
@@ -150,7 +150,7 @@ class controlGRAPH(tk.Frame):
         self.poisson_y = 0
 
         # Bouton pour supprimer toutes les données actuellement chargées
-        self.button_clear_data = Button(self.control_frame, text="Clear All Data", command=self.clear_data)
+        self.button_clear_data = Button(self.control_frame, text="Clear All Data", command=lambda:clear_data(self))
         self.button_clear_data.grid(row=1, column=4, padx=5, pady=5, sticky="w")
 
         self.pic_control = controlPIC(self, self.uart_terminal, self)
@@ -180,16 +180,6 @@ class controlGRAPH(tk.Frame):
                 update_plot(self)
         else:
             messagebox.showinfo("Configuration error", "Frequency must be set between 1 Hz and 50 000 Hz!")
-
-    """
-    def add_erlang_fit(self, ax, data, time, k_value, period):
-        self.erlang_x, self.erlang_y = add_erlang_fit(ax, data, time, k_value, period)
-
-    def add_gaussian_fit(self, ax, data):
-        self.gaussian_x, self.gaussian_y = add_gaussian_fit(ax, data)
-
-    def add_poisson_fit(self, ax, data):
-        self.poisson_x, self.poisson_y = add_poisson_fit(ax, data)
     """
     def open_file(self):
         if 1 <= int(self.entry.get()) <= 50000:
@@ -247,18 +237,18 @@ class controlGRAPH(tk.Frame):
             self.ax.set_ylabel('Iteration')  # Ordonnée
             self.ax.grid(True)  # Affichage d'une grille
             self.canvas.draw()
-
+    """
     def choose_fit(self):
         if not self.fit_erlang.get() and not self.fit_poisson.get() and not self.fit_gaussian.get():
             messagebox.showinfo("Saving Data error", "No fit function are currently plotted!")
         else:
             dialog = CustomDialog(self.control_frame, title="Saving fit data", show_choice1=self.fit_erlang.get(), show_choice2=self.fit_gaussian.get(), show_choice3=self.fit_poisson.get())
             if dialog.choice == "Erlang":
-                self.save_to_csv(self.erlang_y)
+                save_to_csv(self.erlang_y)
             if dialog.choice == "Poisson":
-                self.save_to_csv(self.poisson_y)
+                save_to_csv(self.poisson_y)
             if dialog.choice == "Gaussian":
-                self.save_to_csv(self.gaussian_y)
+                save_to_csv(self.gaussian_y)
 
 
 
@@ -448,6 +438,9 @@ class controlPIC(tk.Frame):
                 self.label3.grid_forget()
                 self.label2.grid(row=1, column=0, padx=5, pady=5, sticky="w")
                 self.chrono.mode = "-"
+                self.graph_control.fit_erlang.set(False)
+                self.graph_control.fit_gaussian.set(False)
+                self.graph_control.fit_poisson.set(False)
             elif mode == "Poisson":
                 self.uart_terminal.send_data('p')
                 self.factor_menu.grid_forget() # On desactive l'accès au facteur k
@@ -459,6 +452,9 @@ class controlPIC(tk.Frame):
                 self.label2.grid_forget()
                 self.reset_pool_button.grid_forget()
                 self.chrono.mode = "-"
+                self.graph_control.fit_erlang.set(False)
+                self.graph_control.fit_gaussian.set(False)
+                self.graph_control.fit_poisson.set(False)
             elif mode == "Piscine":
                 self.uart_terminal.send_data('o')
                 self.factor_menu.grid_forget() # On desactive l'accès au facteur k
@@ -471,6 +467,9 @@ class controlPIC(tk.Frame):
                 self.reset_pool_button.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
                 self.delay_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
                 self.chrono.mode = "Piscine"
+                self.graph_control.fit_erlang.set(False)
+                self.graph_control.fit_gaussian.set(False)
+                self.graph_control.fit_poisson.set(False)
                 self.reset_pool_count()
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")

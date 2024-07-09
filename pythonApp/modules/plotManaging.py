@@ -1,5 +1,6 @@
 import numpy as np
 from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_fit
+from tkinter import messagebox
 
 def handle_erlang_mode(control_graph):
     print("Erlang mode detected")
@@ -119,3 +120,21 @@ def handle_add_gaussian_fit(graph_control, ax, data):
 
 def handle_add_poisson_fit(graph_control, ax, data):
     graph_control.poisson_x, graph_control.poisson_y = add_poisson_fit(ax, data)
+
+def clear_data(control_graph):
+    answer = messagebox.askyesno("Clear All Data ?", "Do you really wish to remove all measured data ? Action can not be reverted.")
+    if answer:
+        control_graph.reset_tab(control_graph.data)
+        control_graph.data = [0] * len(control_graph.data)
+        print(control_graph.fit_erlang.get())
+        control_graph.fit_erlang.set(False)
+        print(control_graph.fit_erlang.get())
+        control_graph.fit_poisson.set(False)
+        control_graph.fit_gaussian.set(False)
+        control_graph.ax.clear()
+        control_graph.ax.plot(control_graph.data, label='Measured Data')
+        control_graph.ax.set_title('Graphic Displayer')  # Titre
+        control_graph.ax.set_xlabel('Channel')  # Abscisse
+        control_graph.ax.set_ylabel('Iteration')  # Ordonnée
+        control_graph.ax.grid(True)  # Affichage d'une grille
+        control_graph.canvas.draw()
