@@ -11,7 +11,7 @@ def add_erlang_fit(ax, data, time, k_value, period):
     # Fonction pour l'affichage de l'exponentielle correspondant à la distribution d'Erlang.
     print(data)
     values = data
-    keys = time  # Utilisez self.time ici
+    keys = time  # Utilisez self.time ici 
 
     try:
         # Limiter les valeurs x à la longueur des données

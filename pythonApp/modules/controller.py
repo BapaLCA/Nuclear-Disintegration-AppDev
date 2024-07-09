@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
 from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_fit
-from modules.plotManaging import *
+from modules.plotManaging import update_plot
 import numpy as np
 import time
 import csv
@@ -125,11 +125,11 @@ class controlGRAPH(tk.Frame):
         self.fit_poisson = tk.BooleanVar()
 
         # Checkboxes pour tracer Erlang, Gaussienne ou/et Poisson
-        self.button_exp = Checkbutton(self.control_frame, text="Add Erlang Fit", variable=self.fit_erlang, command=self.update_plot)
+        self.button_exp = Checkbutton(self.control_frame, text="Add Erlang Fit", variable=self.fit_erlang, command=lambda:update_plot(self))
         self.button_exp.grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.button_gaussian = Checkbutton(self.control_frame, text="Add Gaussian Fit", variable=self.fit_gaussian, command=self.update_plot)
+        self.button_gaussian = Checkbutton(self.control_frame, text="Add Gaussian Fit", variable=self.fit_gaussian, command=lambda:update_plot(self))
         self.button_gaussian.grid(row=1, column=1, padx=5, pady=5, sticky="w")
-        self.button_poisson = Checkbutton(self.control_frame, text="Add Poisson Fit", variable=self.fit_poisson, command=self.update_plot)
+        self.button_poisson = Checkbutton(self.control_frame, text="Add Poisson Fit", variable=self.fit_poisson, command=lambda:update_plot(self))
         self.button_poisson.grid(row=1, column=2, padx=5, pady=5, sticky="w")
 
         # Disable fit buttons until mode is set
@@ -160,7 +160,7 @@ class controlGRAPH(tk.Frame):
         print("Plot called")
         self.data = np.add(self.data, uart_data)
         self.reset_tab(uart_data)
-        self.update_plot()
+        update_plot(self)
 
     def reset_tab(self, tab):
         for i in range(len(tab)):
@@ -172,115 +172,16 @@ class controlGRAPH(tk.Frame):
     def set_delay(self, value):
         self.delay = int(value)
 
-    def update_plot(self):
-        if self.data is not None:
-            print("Update plot called")
-            print(self.mode)
-            if self.mode == "Erlang":
-                print("Erlang mode detected")
-                # Rescaling
-                if self.entry.get() != '0':
-                    period = 1/int(self.entry.get())*1000000
-                    self.time = np.arange(0, len(self.data) * period, period)
-                else:
-                    self.time=self.data
-                # Filtrer les indices des valeurs non nulles dans self.data
-                non_zero_indices = [i for i, value in enumerate(self.data) if value != 0]
-                
-                if non_zero_indices:
-                    # Ajuster les limites de l'axe x pour zoomer sur les valeurs non nulles
-                    min_index = min(non_zero_indices)
-                    max_index = max(non_zero_indices)
-                    
-                    self.ax.clear()
-                    self.ax.plot(self.time, self.data, label='Measured Data')
-                    self.ax.set_title(f"Time elapsed between {self.factor_k+1} atom disintegrations")  # Titre
-                    self.ax.set_xlabel('Time (microseconds)')  # Abscisse
-                    self.ax.set_ylabel('Iterance')  # Ordonnée
-                    self.ax.grid(True)  # Affichage d'une grille
-                    
-                    if self.fit_erlang.get():
-                        self.add_erlang_fit(self.ax, self.data, self.time, self.factor_k, period)
-                    if self.fit_gaussian.get():
-                        print("No Gaussian fit on Erlang mode")
-                    if self.fit_poisson.get():
-                        print("No Poisson fit on Erlang mode")
-                    
-                    self.ax.set_xlim(self.time[min_index], self.time[max_index])
-                    self.ax.legend()
-                    self.canvas.draw()
-                else:
-                    print("All data values are zero")
-            elif self.mode == "Piscine":
-                # Rescaling
-                period = self.delay
-                self.time = np.arange(0, len(self.data) * period, period)
-                # Filtrer les indices des valeurs non nulles dans self.data
-                non_zero_indices = [i for i, value in enumerate(self.data) if value != 0]
-                
-                if non_zero_indices:
-                    # Ajuster les limites de l'axe x pour zoomer sur les valeurs non nulles
-                    min_index = min(non_zero_indices)
-                    max_index = max(non_zero_indices)
-                    
-                    self.ax.clear()
-                    self.ax.plot(self.time, self.data, label='Measured Data')
-                    self.ax.set_title(f"Number of atom disintegrations measured VS Time elapsed")  # Titre
-                    self.ax.set_xlabel('Time (seconds)')  # Abscisse
-                    self.ax.set_ylabel('Number of disintegrations')  # Ordonnée
-                    self.ax.grid(True)  # Affichage d'une grille
-                    
-                    if self.fit_erlang.get():
-                        print("No Erlang fit on Pool mode")
-                    if self.fit_gaussian.get():
-                        print("No Gaussian fit on Pool mode")
-                    if self.fit_poisson.get():
-                        print("No Poisson fit on Pool mode")
-                    
-                    self.ax.set_xlim(self.time[min_index], self.time[max_index])
-                    self.ax.legend()
-                    self.canvas.draw()
-            else:
-                print("Default mode detected")
-                # Filtrer les indices des valeurs non nulles
-                non_zero_indices = [i for i, value in enumerate(self.data) if value != 0]
-                
-                if non_zero_indices:
-                    # Ajuster les limites de l'axe x pour zoomer sur les valeurs non nulles
-                    min_index = min(non_zero_indices)
-                    max_index = max(non_zero_indices)
-                    
-                    self.ax.clear()
-                    self.ax.plot(self.data, label='Measured Data')
-                    self.ax.set_title(f"Number of atom disintegrations measured in {1/int(self.entry.get())*1000} ms")  # Titre
-                    self.ax.set_xlabel('Number of atom disintegrations')  # Abscisse
-                    self.ax.set_ylabel('Iteration')  # Ordonnée
-                    self.ax.grid(True)  # Affichage d'une grille
-                    if self.mode == "Poisson":
-                        print("Poisson mode detected")
-                        if self.fit_erlang.get():
-                            print("No Erlang fit when Poisson mode")
-                        if self.fit_gaussian.get():
-                            self.add_gaussian_fit(self.ax, self.data)
-                        if self.fit_poisson.get():
-                            self.add_poisson_fit(self.ax, self.data)
-                    
-                    self.ax.set_xlim(min_index, max_index)
-                    self.ax.legend()
-                    self.canvas.draw()
-        else:
-            print("Data is null")
-
     def show_entry_value(self):
         if "1" <= self.entry.get() <= "50000":
             self.user_input = self.entry.get()
             messagebox.showinfo("Value selected", f"Frequency value entered: {self.user_input} Hz")
             if self.data is not None:
-                self.update_plot()
+                update_plot(self)
         else:
             messagebox.showinfo("Configuration error", "Frequency must be set between 1 Hz and 50 000 Hz!")
 
-
+    """
     def add_erlang_fit(self, ax, data, time, k_value, period):
         self.erlang_x, self.erlang_y = add_erlang_fit(ax, data, time, k_value, period)
 
@@ -289,7 +190,7 @@ class controlGRAPH(tk.Frame):
 
     def add_poisson_fit(self, ax, data):
         self.poisson_x, self.poisson_y = add_poisson_fit(ax, data)
-
+    """
     def open_file(self):
         if 1 <= int(self.entry.get()) <= 50000:
 
