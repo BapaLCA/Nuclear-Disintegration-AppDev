@@ -1,77 +1,50 @@
-import tkinter as tk
-import time
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
-class Chronometer:
-    def __init__(self, root, text, callback=None):
-        self.root = root
-        self.text = text
-        self.callback = callback  # Ajout de la fonction de rappel
-        
-        self.running = False
-        self.start_time = 0
-        self.elapsed_time = 0
-        self.last_notified_second = 0  # Marqueur pour les derniers 10 secondes vérifiés
-        
-        self.label = tk.Label(root, text=self.text)
-        self.label.pack(side=tk.LEFT, padx=1, pady=2)
-        self.time_label = tk.Label(root, text="00:00:00", font=("Helvetica", 10))
-        self.time_label.pack(side=tk.LEFT, padx=1, pady=2)
-        
-        self.start_button = tk.Button(root, text="Start", command=self.start)
-        self.start_button.pack(side=tk.LEFT, padx=5)
-        
-        self.stop_button = tk.Button(root, text="Stop", command=self.stop)
-        self.stop_button.pack(side=tk.LEFT, padx=5)
-        
-        self.reset_button = tk.Button(root, text="Reset", command=self.reset)
-        self.reset_button.pack(side=tk.RIGHT, padx=5)
-        
-        self.update_clock()
-    
-    def start(self):
-        if not self.running:
-            self.running = True
-            self.start_time = time.time() - self.elapsed_time
-            self.update_clock()
-    
-    def stop(self):
-        if self.running:
-            self.running = False
-            self.elapsed_time = time.time() - self.start_time
-    
-    def reset(self):
-        self.running = False
-        self.start_time = 0
-        self.elapsed_time = 0
-        self.last_notified_second = 0  # Réinitialiser le marqueur
-        self.time_label.config(text="00:00:00")
-    
-    def update_clock(self):
-        if self.running:
-            self.elapsed_time = time.time() - self.start_time
-            elapsed_seconds = int(self.elapsed_time)
-            hours = elapsed_seconds // 3600
-            minutes = (elapsed_seconds % 3600) // 60
-            seconds = elapsed_seconds % 60
-            self.time_label.config(text=f"{hours:02}:{minutes:02}:{seconds:02}")
-            
-            # Vérifier si un multiple de 10 secondes s'est écoulé et appeler le callback si défini
-            if elapsed_seconds % 10 == 0 and elapsed_seconds != self.last_notified_second:
-                self.last_notified_second = elapsed_seconds
-                if self.callback and self.mode.get() == "Piscine":
-                    self.callback()
-                
-        self.root.after(50, self.update_clock)  # Mettre à jour toutes les 50 ms
+# Définition de la fonction modèle
+def double_exponential_func(t, a1, b1, a2, b2):
+    return a1 * np.exp(-b1 * t) + a2 * np.exp(-b2 * t)
 
-# Exemple de classe Controller
-class Controller:
-    def __init__(self, root):
-        self.chronometer = Chronometer(root, "Chrono", self.ten_seconds_elapsed)
-        
-    def ten_seconds_elapsed(self):
-        print("10 secondes se sont écoulées")
+# Fonction pour ajuster et tracer la courbe exponentielle double
+def add_double_exponential_fit(ax, data, interval):
+    # Générer l'axe des temps basé sur l'intervalle régulier
+    t_data = np.arange(len(data)) * interval
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    controller = Controller(root)
-    root.mainloop()
+    # Ajustement des paramètres de la fonction modèle aux données
+    initial_guess = [max(data), 0.1, max(data) / 2, 0.01]  # Guess initial pour les paramètres a1, b1, a2, b2
+    params, params_covariance = curve_fit(double_exponential_func, t_data, data, p0=initial_guess)
+
+    # Extraction des paramètres ajustés
+    a1, b1, a2, b2 = params
+
+    # Affichage des résultats
+    print(f"Paramètres ajustés : a1 = {a1}, b1 = {b1}, a2 = {a2}, b2 = {b2}")
+
+    # Générer les points pour tracer la courbe ajustée
+    t_fit = np.linspace(min(t_data), max(t_data), 100)
+    y_fit = double_exponential_func(t_fit, a1, b1, a2, b2)
+
+    # Tracer les données mesurées
+    ax.scatter(t_data, data, label='Données mesurées', color='red')
+    # Tracer la courbe ajustée
+    ax.plot(t_fit, y_fit, label='Ajustement double exponentiel', color='blue')
+
+    # Ajouter des labels et une légende
+    ax.set_xlabel('Temps (s)')
+    ax.set_ylabel('Valeurs mesurées')
+    ax.legend()
+
+# Exemple d'utilisation
+# Données d'exemple avec un intervalle de temps régulier choisi (par exemple, 5 secondes)
+interval = 5  # Intervalle de temps en secondes
+data = np.array([15, 12, 9.5, 7.8, 6.5, 5.3, 4.5, 3.8, 3.2, 2.7])
+
+# Création d'un axe de tracé
+fig, ax = plt.subplots(figsize=(10, 6))
+
+# Appel de la fonction pour ajouter l'ajustement double exponentiel au tracé
+add_double_exponential_fit(ax, data, interval)
+
+# Afficher le graphique
+plt.show()

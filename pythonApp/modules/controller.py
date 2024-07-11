@@ -92,10 +92,11 @@ class controlGRAPH(tk.Frame):
         self.control_frame.grid_columnconfigure(1, weight=1)
         self.control_frame.grid_columnconfigure(2, weight=1)
         self.control_frame.grid_columnconfigure(3, weight=1)
+        self.control_frame.grid_columnconfigure(4, weight=1)
 
         # Conteneur pour les widgets de choix de la fréquence
         self.frame_freq = tk.Frame(self.control_frame, bd=2, bg="lightblue", relief="ridge")
-        self.frame_freq.grid(row=0, column=2, sticky="w")
+        self.frame_freq.grid(row=0, column=2, columnspan=2, sticky="w")
         self.frame_freq.grid_rowconfigure(0, weight=1)
         self.frame_freq.grid_columnconfigure(0, weight=1)
         self.frame_freq.grid_columnconfigure(1, weight=1)
@@ -123,6 +124,7 @@ class controlGRAPH(tk.Frame):
         self.fit_erlang = tk.BooleanVar()
         self.fit_gaussian = tk.BooleanVar()
         self.fit_poisson = tk.BooleanVar()
+        self.fit_exponential = tk.BooleanVar()
 
         # Checkboxes pour tracer Erlang, Gaussienne ou/et Poisson
         self.button_exp = Checkbutton(self.control_frame, text="Add Erlang Fit", variable=self.fit_erlang, command=lambda:update_plot(self))
@@ -131,15 +133,18 @@ class controlGRAPH(tk.Frame):
         self.button_gaussian.grid(row=1, column=1, padx=5, pady=5, sticky="w")
         self.button_poisson = Checkbutton(self.control_frame, text="Add Poisson Fit", variable=self.fit_poisson, command=lambda:update_plot(self))
         self.button_poisson.grid(row=1, column=2, padx=5, pady=5, sticky="w")
+        self.button_exponential = Checkbutton(self.control_frame, text="Add Exponential Fit", variable=self.fit_exponential, command=lambda:update_plot(self))
+        self.button_exponential.grid(row=1, column=3, padx=5, pady=5, sticky="w")
 
         # Disable fit buttons until mode is set
         self.button_exp.config(state=tk.DISABLED)
         self.button_gaussian.config(state=tk.DISABLED)
         self.button_poisson.config(state=tk.DISABLED)
+        self.button_exponential.config(state=tk.DISABLED)
 
         # Bouton de sauvegarde des données de fit function en fichier .csv
         self.button_save_fit = Button(self.control_frame, text="Save Fit to CSV", command=self.choose_fit)
-        self.button_save_fit.grid(row=1,column=3,padx=5,pady=5, sticky="w")
+        self.button_save_fit.grid(row=1,column=4,padx=5,pady=5, sticky="w")
 
         # Données récupérées des fonctions fit
         self.erlang_x = 0
@@ -148,10 +153,12 @@ class controlGRAPH(tk.Frame):
         self.gaussian_y = 0
         self.poisson_x = 0
         self.poisson_y = 0
+        self.exponential_x = 0
+        self.exponential_y = 0
 
         # Bouton pour supprimer toutes les données actuellement chargées
         self.button_clear_data = Button(self.control_frame, text="Clear All Data", command=lambda:clear_data(self))
-        self.button_clear_data.grid(row=1, column=4, padx=5, pady=5, sticky="w")
+        self.button_clear_data.grid(row=1, column=5, padx=5, pady=5, sticky="w")
 
         self.pic_control = controlPIC(self, self.uart_terminal, self)
         self.pic_control.grid(row=2, column=0, padx=5, pady=5)
@@ -180,64 +187,7 @@ class controlGRAPH(tk.Frame):
                 update_plot(self)
         else:
             messagebox.showinfo("Configuration error", "Frequency must be set between 1 Hz and 50 000 Hz!")
-    """
-    def open_file(self):
-        if 1 <= int(self.entry.get()) <= 50000:
 
-            answer = messagebox.askyesno("Load new data ?", "Loading a file will erase all existing data currently measured. Do you wish to continue ?")
-            if answer:
-                filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])  # Ouverture d'un explorateur de fichier pour sélectionner un fichier csv à lire
-                if not filepath:
-                    return  # Termine la fonction ici si aucun fichier n'est sélectionné
-                self.data = [0] * len(self.data)  # Efface les anciennes données
-                with open(filepath, 'r') as csvfile:  # Ouverture du fichier spécifié en tant que csv
-                    csvreader = csv.reader(csvfile, delimiter=';')  # Définition du séparateur de données
-                    for row in csvreader:  # Lecture des données
-                        try:
-                            key = int(row[0])  # Lecture des canaux
-                            value = float(row[1])  # Lecture des valeurs relevées
-                            if key > 1024:
-                                print(f"Line {row} greater than limit has been ignored.")
-                                continue  # Ignore la ligne si la valeur dépasse 1024
-                            self.data[key] = self.data[key]+value  # Affectation des données dans le tableau data
-                        except (ValueError, IndexError) as e:
-                            # Log the error and continue
-                            print(f"Error processing line : {row}. IndexError: {e}")
-                            continue
-                uart_data = [0]*1024 # Création d'un tableau de données uart vide pour appeler la fonction plot uart
-                self.plot_uart_data(uart_data) # On met à jour l'affichage des données
-        else:
-            messagebox.showinfo("Configuration Error", "Frequency must be set between 1 and 50 000 Hz to display!")
-
-    def save_to_csv(self, data):
-        # Ouvrir une boîte de dialogue pour choisir l'emplacement de sauvegarde
-        file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
-        if file_path:
-            with open(file_path, mode='w', newline='') as file:
-                writer = csv.writer(file, delimiter=';')
-                # Écrire les données avec le format "numéro de cellule;valeur"
-                for i, value in enumerate(data):
-                    writer.writerow([i, value])
-            messagebox.showinfo("Success", f"Data has been saved to {file_path}")
-
-    def clear_data(self):
-        answer = messagebox.askyesno("Clear All Data ?", "Do you really wish to remove all measured data ? Action can not be reverted.")
-        if answer:
-            self.reset_tab(self.data)
-            self.data = [0] * len(self.data)
-            print(self.fit_erlang.get())
-            self.fit_erlang.set(False)
-            print(self.fit_erlang.get())
-            self.fit_poisson.set(False)
-            self.fit_gaussian.set(False)
-            self.ax.clear()
-            self.ax.plot(self.data, label='Measured Data')
-            self.ax.set_title('Graphic Displayer')  # Titre
-            self.ax.set_xlabel('Channel')  # Abscisse
-            self.ax.set_ylabel('Iteration')  # Ordonnée
-            self.ax.grid(True)  # Affichage d'une grille
-            self.canvas.draw()
-    """
     def choose_fit(self):
         if not self.fit_erlang.get() and not self.fit_poisson.get() and not self.fit_gaussian.get():
             messagebox.showinfo("Saving Data error", "No fit function are currently plotted!")
@@ -249,6 +199,8 @@ class controlGRAPH(tk.Frame):
                 save_to_csv(self.poisson_y)
             if dialog.choice == "Gaussian":
                 save_to_csv(self.gaussian_y)
+            if dialog.choice == "Piscine":
+                save_to_csv(self.exponential_y)
 
 
 
@@ -433,6 +385,7 @@ class controlPIC(tk.Frame):
                 self.graph_control.button_exp.config(state=tk.NORMAL)
                 self.graph_control.button_gaussian.config(state=tk.DISABLED)
                 self.graph_control.button_poisson.config(state=tk.DISABLED)
+                self.graph_control.button_exponential.config(state=tk.DISABLED)
                 self.reset_pool_button.grid_forget()
                 self.delay_menu.grid_forget()
                 self.label3.grid_forget()
@@ -441,12 +394,14 @@ class controlPIC(tk.Frame):
                 self.graph_control.fit_erlang.set(False)
                 self.graph_control.fit_gaussian.set(False)
                 self.graph_control.fit_poisson.set(False)
+                self.graph_control.fit_exponential.set(False)
             elif mode == "Poisson":
                 self.uart_terminal.send_data('p')
                 self.factor_menu.grid_forget() # On desactive l'accès au facteur k
                 self.graph_control.button_gaussian.config(state=tk.NORMAL)
                 self.graph_control.button_poisson.config(state=tk.NORMAL)
                 self.graph_control.button_exp.config(state=tk.DISABLED)
+                self.graph_control.button_exponential.config(state=tk.DISABLED)
                 self.delay_menu.grid_forget()
                 self.label3.grid_forget()
                 self.label2.grid_forget()
@@ -455,12 +410,14 @@ class controlPIC(tk.Frame):
                 self.graph_control.fit_erlang.set(False)
                 self.graph_control.fit_gaussian.set(False)
                 self.graph_control.fit_poisson.set(False)
+                self.graph_control.fit_exponential.set(False)
             elif mode == "Piscine":
                 self.uart_terminal.send_data('o')
                 self.factor_menu.grid_forget() # On desactive l'accès au facteur k
                 self.graph_control.button_gaussian.config(state=tk.DISABLED)
                 self.graph_control.button_poisson.config(state=tk.DISABLED)
                 self.graph_control.button_exp.config(state=tk.DISABLED)
+                self.graph_control.button_exponential.config(state=tk.NORMAL)
                 self.label2.grid_forget()
                 self.label3.grid(row=1, column=0, padx=5, pady=5, sticky="w")
                 self.factor_menu.grid_forget()
@@ -470,6 +427,7 @@ class controlPIC(tk.Frame):
                 self.graph_control.fit_erlang.set(False)
                 self.graph_control.fit_gaussian.set(False)
                 self.graph_control.fit_poisson.set(False)
+                self.graph_control.fit_exponential.set(False)
                 self.reset_pool_count()
         else:
             messagebox.showinfo("Terminal error", "UART Terminal is not initialized!")

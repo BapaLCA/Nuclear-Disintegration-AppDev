@@ -1,5 +1,5 @@
 import numpy as np
-from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_fit
+from modules.fitFunctions import add_erlang_fit, add_poisson_fit, add_gaussian_fit, add_exponential_fit, add_double_exponential_fit
 from tkinter import messagebox
 
 def handle_erlang_mode(control_graph):
@@ -64,6 +64,8 @@ def handle_piscine_mode(control_graph):
             print("No Gaussian fit on Pool mode")
         if control_graph.fit_poisson.get():
             print("No Poisson fit on Pool mode")
+        if control_graph.fit_exponential.get():
+            handle_add_exponential_fit(control_graph, control_graph.ax, control_graph.data)
 
         control_graph.ax.set_xlim(control_graph.time[min_index], control_graph.time[max_index])
         control_graph.ax.legend()
@@ -120,6 +122,9 @@ def handle_add_gaussian_fit(graph_control, ax, data):
 
 def handle_add_poisson_fit(graph_control, ax, data):
     graph_control.poisson_x, graph_control.poisson_y = add_poisson_fit(ax, data)
+
+def handle_add_exponential_fit(graph_control, ax, data):
+    graph_control.exponential_x, graph_control.exponential_y = add_exponential_fit(ax, data, graph_control.delay)
 
 def clear_data(control_graph):
     answer = messagebox.askyesno("Clear All Data ?", "Do you really wish to remove all measured data ? Action can not be reverted.")
