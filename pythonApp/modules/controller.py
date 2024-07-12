@@ -191,14 +191,14 @@ class controlGRAPH(tk.Frame):
         if not self.fit_erlang.get() and not self.fit_poisson.get() and not self.fit_gaussian.get() and not self.fit_exponential.get():
             messagebox.showinfo("Saving Data error", "No fit function are currently plotted!")
         else:
-            dialog = CustomDialog(self.control_frame, title="Saving fit data", show_choice1=self.fit_erlang.get(), show_choice2=self.fit_gaussian.get(), show_choice3=self.fit_poisson.get())
+            dialog = CustomDialog(self.control_frame, title="Saving fit data", show_choice1=self.fit_erlang.get(), show_choice2=self.fit_gaussian.get(), show_choice3=self.fit_poisson.get(), show_choice4=self.fit_exponential.get())
             if dialog.choice == "Erlang":
                 save_to_csv(self.erlang_y)
             if dialog.choice == "Poisson":
                 save_to_csv(self.poisson_y)
             if dialog.choice == "Gaussian":
                 save_to_csv(self.gaussian_y)
-            if dialog.choice == "Piscine":
+            if dialog.choice == "Exponential":
                 save_to_csv(self.exponential_y)
 
 

@@ -8,13 +8,13 @@ class Chronometer:
         self.root = root
         self.text = text
         self.mode = "-"
-        self.callback = callback #fonction de rappel
+        self.callback = callback #Call back function
         self.update_time = 10
         
         self.running = False
         self.start_time = 0
         self.elapsed_time = 0
-        self.last_notified_second = 0  # Marqueur pour les derniers 10 secondes vérifiés
+        self.last_notified_second = 0  # Time elapsed to check (delay for pool mode)
         
         self.label = tk.Label(root, text=self.text)
         self.label.pack(side=tk.LEFT, padx=1, pady=2)
@@ -22,10 +22,8 @@ class Chronometer:
         self.time_label.pack(side=tk.LEFT, padx=1, pady=2)
         
         self.start_button = tk.Button(root, text="Start", command=self.start)
-        #self.start_button.pack(side=tk.LEFT, padx=5)
         
         self.stop_button = tk.Button(root, text="Stop", command=self.stop)
-        #self.stop_button.pack(side=tk.LEFT, padx=5)
         
         self.reset_button = tk.Button(root, text="Reset", command=self.reset)
         self.reset_button.pack(side=tk.RIGHT, padx=5)
@@ -47,7 +45,7 @@ class Chronometer:
         self.running = False
         self.start_time = 0
         self.elapsed_time = 0
-        self.last_notified_second = 0  # Réinitialiser le marqueur
+        self.last_notified_second = 0  # Reset the time elapsed to check (delay)
         self.time_label.config(text="00:00:00")
     
     def update_clock(self):
@@ -59,21 +57,22 @@ class Chronometer:
             seconds = elapsed_seconds % 60
             self.time_label.config(text=f"{hours:02}:{minutes:02}:{seconds:02}")
             
-            # Vérifier si un multiple de 10 secondes s'est écoulé et appeler le callback si défini
+            # Check if a multiple of the Delay set has elapsed and call the callback function
             if elapsed_seconds % self.update_time == 0 and elapsed_seconds != self.last_notified_second:
                 self.last_notified_second = elapsed_seconds
                 if self.callback and self.mode == "Piscine":
                     self.callback()
                 
-        self.root.after(50, self.update_clock)  # Mettre à jour toutes les 50 ms
+        self.root.after(50, self.update_clock)  # Update the timer every 50 ms
 
 
 
 class CustomDialog(simpledialog.Dialog):
-    def __init__(self, parent, title=None, show_choice1=False, show_choice2=False, show_choice3=False):
+    def __init__(self, parent, title=None, show_choice1=False, show_choice2=False, show_choice3=False, show_choice4=False):
         self.show_choice1 = show_choice1
         self.show_choice2 = show_choice2
         self.show_choice3 = show_choice3
+        self.show_choice4 = show_choice4
         super().__init__(parent, title=title)
     
     def body(self, master):
@@ -83,7 +82,8 @@ class CustomDialog(simpledialog.Dialog):
         self.button1 = tk.Button(master, text="Erlang", command=lambda: self.set_choice("Erlang"))
         self.button2 = tk.Button(master, text="Gaussian", command=lambda: self.set_choice("Gaussian"))
         self.button3 = tk.Button(master, text="Poisson", command=lambda: self.set_choice("Poisson"))
-        # Créez des boutons pour les trois choix
+        self.button4 = tk.Button(master, text="Exponential", command=lambda: self.set_choice("Exponential"))
+        # Create buttons for each choice
         if self.show_choice1==True:
             
             self.button1.pack(side=tk.LEFT, padx=5, expand=True)
@@ -96,12 +96,16 @@ class CustomDialog(simpledialog.Dialog):
             
             self.button3.pack(side=tk.LEFT, padx=5, expand=True)
         
-        return self.button1 if self.show_choice1 else (self.button2 if self.show_choice2 else self.button3)
+        if self.show_choice4==True:
+
+            self.button4.pack(side=tk.LEFT, padx=5, pady=5)
+        
+        return self.button1 if self.show_choice1 else (self.button2 if self.show_choice2 else (self.button3 if self.show_choice3 else self.button4))
 
 
     def set_choice(self, choice):
         self.choice = choice
-        self.destroy()  # Ferme la boîte de dialogue
+        self.destroy()  # Close the dialog box
 
     def apply(self):
         self.result = self.choice
