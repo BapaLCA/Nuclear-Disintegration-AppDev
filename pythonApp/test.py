@@ -1,50 +1,29 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
+import tkinter as tk
+from tkinter import ttk
 
-# Définition de la fonction modèle
-def double_exponential_func(t, a1, b1, a2, b2):
-    return a1 * np.exp(-b1 * t) + a2 * np.exp(-b2 * t)
+# Création de la fenêtre principale
+root = tk.Tk()
+root.title("Redimensionnement avec PanedWindow")
 
-# Fonction pour ajuster et tracer la courbe exponentielle double
-def add_double_exponential_fit(ax, data, interval):
-    # Générer l'axe des temps basé sur l'intervalle régulier
-    t_data = np.arange(len(data)) * interval
+# Création du PanedWindow horizontal
+paned_window = ttk.PanedWindow(root, orient=tk.HORIZONTAL)
+paned_window.pack(fill=tk.BOTH, expand=True)
 
-    # Ajustement des paramètres de la fonction modèle aux données
-    initial_guess = [max(data), 0.1, max(data) / 2, 0.01]  # Guess initial pour les paramètres a1, b1, a2, b2
-    params, params_covariance = curve_fit(double_exponential_func, t_data, data, p0=initial_guess)
+# Création de la première frame (à gauche)
+frame1 = ttk.Frame(paned_window, width=200, height=400, relief=tk.SUNKEN)
+frame1.pack_propagate(False)
+label1 = tk.Label(frame1, text="Frame 1")
+label1.pack(fill=tk.BOTH, expand=True)
 
-    # Extraction des paramètres ajustés
-    a1, b1, a2, b2 = params
+# Création de la seconde frame (à droite)
+frame2 = ttk.Frame(paned_window, width=200, height=400, relief=tk.SUNKEN)
+frame2.pack_propagate(False)
+label2 = tk.Label(frame2, text="Frame 2")
+label2.pack(fill=tk.BOTH, expand=True)
 
-    # Affichage des résultats
-    print(f"Paramètres ajustés : a1 = {a1}, b1 = {b1}, a2 = {a2}, b2 = {b2}")
+# Ajout des frames au PanedWindow
+paned_window.add(frame1, weight=1)
+paned_window.add(frame2, weight=1)
 
-    # Générer les points pour tracer la courbe ajustée
-    t_fit = np.linspace(min(t_data), max(t_data), 100)
-    y_fit = double_exponential_func(t_fit, a1, b1, a2, b2)
-
-    # Tracer les données mesurées
-    ax.scatter(t_data, data, label='Données mesurées', color='red')
-    # Tracer la courbe ajustée
-    ax.plot(t_fit, y_fit, label='Ajustement double exponentiel', color='blue')
-
-    # Ajouter des labels et une légende
-    ax.set_xlabel('Temps (s)')
-    ax.set_ylabel('Valeurs mesurées')
-    ax.legend()
-
-# Exemple d'utilisation
-# Données d'exemple avec un intervalle de temps régulier choisi (par exemple, 5 secondes)
-interval = 5  # Intervalle de temps en secondes
-data = np.array([15, 12, 9.5, 7.8, 6.5, 5.3, 4.5, 3.8, 3.2, 2.7])
-
-# Création d'un axe de tracé
-fig, ax = plt.subplots(figsize=(10, 6))
-
-# Appel de la fonction pour ajouter l'ajustement double exponentiel au tracé
-add_double_exponential_fit(ax, data, interval)
-
-# Afficher le graphique
-plt.show()
+# Lancement de la boucle principale
+root.mainloop()

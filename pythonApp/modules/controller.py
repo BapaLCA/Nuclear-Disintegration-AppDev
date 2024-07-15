@@ -4,11 +4,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from modules.terminalUART import *
 from modules.plotManaging import update_plot, clear_data
-from modules.fileManaging import open_file, save_to_csv
+from modules.fileManaging import open_file, save_to_csv, choose_fit
 import numpy as np
 import time
-import csv
-from tkinter import filedialog
 from modules.objects import Chronometer, CustomDialog
 
 class controller(tk.Frame):
@@ -42,7 +40,7 @@ class controller(tk.Frame):
         if uart_terminal.check_status!='i': # If PIC is not on Idle on App launch, asking for it to stop and go to Idle mode
             uart_terminal.send_data('s')
 
-    def plot_uart_data(self, data):
+    def plot_uart_data(self, data): # UART Terminal's callback to graph controller
         self.graph_control.plot_uart_data(data)
 
 
@@ -50,13 +48,13 @@ class controller(tk.Frame):
 class controlGRAPH(tk.Frame):
     def __init__(self, parent, uart_terminal):
         super().__init__(parent)
-        self.uart_terminal = uart_terminal
-        self.data = [0]*1024
-        self.time = [0]*1024
-        self.user_input = 0
-        self.factor_k = 1
-        self.delay = 10
-        self.mode = "-"
+        self.uart_terminal = uart_terminal # Access to Terminal from Graph controller
+        self.data = [0]*1024 # Tab to store data
+        self.time = [0]*1024 # Tab to store data
+        self.user_input = 0 # Variable to store frequency input from user
+        self.factor_k = 1 # K factor for Erlang distribution
+        self.delay = 10 # Delay between measures of Pool mode
+        self.mode = "-" # Measure Mode
 
         self.create_widgets()
         self.plot_uart_data(uart_terminal.received_data)
@@ -143,7 +141,7 @@ class controlGRAPH(tk.Frame):
         self.button_exponential.config(state=tk.DISABLED)
 
         # Button for saving fit data into CSV file
-        self.button_save_fit = Button(self.control_frame, text="Save Fit to CSV", command=self.choose_fit)
+        self.button_save_fit = Button(self.control_frame, text="Save Fit to CSV", command=lambda:choose_fit(self))
         self.button_save_fit.grid(row=1,column=4,padx=5,pady=5, sticky="w")
 
         # X and Y axis variables to retrieve fit function data
@@ -187,19 +185,7 @@ class controlGRAPH(tk.Frame):
         else:
             messagebox.showinfo("Configuration error", "Frequency must be set between 1 Hz and 50 000 Hz!")
 
-    def choose_fit(self): # Message box to select which fit function that's currently displayed you want to save to CSV
-        if not self.fit_erlang.get() and not self.fit_poisson.get() and not self.fit_gaussian.get() and not self.fit_exponential.get():
-            messagebox.showinfo("Saving Data error", "No fit function are currently plotted!")
-        else:
-            dialog = CustomDialog(self.control_frame, title="Saving fit data", show_choice1=self.fit_erlang.get(), show_choice2=self.fit_gaussian.get(), show_choice3=self.fit_poisson.get(), show_choice4=self.fit_exponential.get())
-            if dialog.choice == "Erlang":
-                save_to_csv(self.erlang_y)
-            if dialog.choice == "Poisson":
-                save_to_csv(self.poisson_y)
-            if dialog.choice == "Gaussian":
-                save_to_csv(self.gaussian_y)
-            if dialog.choice == "Exponential":
-                save_to_csv(self.exponential_y)
+
 
 
 
