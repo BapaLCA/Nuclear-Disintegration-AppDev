@@ -1,57 +1,57 @@
-/////////////////////////////// Librairie de fonctions pour liaison serie UART /////////////////////////////////////////////
+/////////////////////////////// Library for UART functions /////////////////////////////////////////////
 
-// Variables pour les fonctions UART //
+// Global variables for UART functions //
 
-volatile int j=0; // Entier utilise pour les boucles
-volatile char str[15]; // Chaine de caracteres utilisees pour la transmission de donnees
+volatile int j=0; // Int used for loops
+volatile char str[15]; // String used for data transmission
 
-// Fonctions UART //
+// UART functions //
 
-// Fonction d'ecriture d'un caractere par UART
+// Char writing function
 void UART_send_char(char c)
 {
-    while(!TXSTA.TRMT); // Attente de la fin de transmission precedente
-    TXREG = c; // Envoie du caractere
+    while(!TXSTA.TRMT); // Waiting for previous transmission to be done
+    TXREG = c; // Sends input char
 }
 
-// Fonction d'ecriture d'une chaine de caracteres par UART
+// String writing function
 void UART_send_string(const char *d)
 {
      while(*d!='\0'){
-         UART_send_char(*d);
+         UART_send_char(*d); // Reuses char writing function for each char of the input string
          d++;
          }
 }
 
-// Fonction d'ecriture d'un entier converti en chaine de caracteres par UART
+// Int writing function (converted as string)
 void UART_send_int(int d)
 {
-    IntToStrWithZeros(d, str);
+    IntToStrWithZeros(d, str); // Converts Int to String
 
     for(j=0;str[j]!='\0';j++)
     {
-        while(!TXSTA.TRMT);
+        while(!TXSTA.TRMT); // Waits for previous transmission to be done
         TXREG = str[j];
     }
 }
 
-// Fonction d'ecriture d'un entier long converti en chaine de caracteres par UART
+// Long int writing function (converted as string)
 void UART_send_long_int(int d)
 {
-    LongIntToStrWithZeros(d, str);
+    LongIntToStrWithZeros(d, str); // Converts Long Int to String
 
     for(j=0;str[j]!='\0';j++)
     {
-        while(!TXSTA.TRMT);
+        while(!TXSTA.TRMT); // Waits for previous transmission to be done
         TXREG = str[j];
     }
 }
 
-// Fonction de lecture de donnees (inutilise)
+// Reading data function (Unusued, as reception is done through interrupt function)
 char UART_read_char() {
-    // Attendre que le caractere soit reçu
+    // Waits for char to be received
     while(!PIR1.RCIF);
 
-    // Retourner le caractere reçu
+    // Returns received char
     return RCREG;
 }

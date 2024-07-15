@@ -1,9 +1,11 @@
 main
 	__CC2DW
 	PORTS_Init
+	ADC_Init
 	UART1_Init
 	init_cpt_data
 	Interrupt_Init
+	displayIntSingleDigit
 	Counting
 	send_data
 		UART_Write
@@ -23,6 +25,8 @@ main
 		UART_send_int
 			IntToStrWithZeros
 				Div_16X16_U
+	UART_Write
+		____DoIFC
 interrupt
 	UART_send_data
 	init_cpt_data

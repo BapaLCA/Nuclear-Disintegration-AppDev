@@ -57,6 +57,88 @@ char UART_read_char() {
 
  return RCREG;
 }
+#line 1 "c:/users/romai/documents/18f4550/nuclear-disintegration appdev/picproject/lib/7seg_functions.h"
+
+
+
+
+const unsigned char DIGITS[] = {
+ 0x3F,
+ 0x06,
+ 0x5B,
+ 0x4F,
+ 0x66,
+ 0x6D,
+ 0x7D,
+ 0x07,
+ 0x7F,
+ 0x6F
+};
+
+const unsigned char LETTERS[] = {
+ 0x77,
+ 0x3E,
+ 0x39,
+ 0x5E,
+ 0x79,
+ 0x71,
+ 0x3D,
+ 0x76,
+ 0x06,
+ 0x1E,
+ 0x38,
+ 0x54,
+ 0x5C,
+ 0x73,
+ 0x67,
+ 0x50,
+ 0x6D,
+ 0x78,
+ 0x1C,
+ 0x6E
+};
+
+
+
+void display7segInt(unsigned int value){
+
+ PORTA = 0x01; PORTD = DIGITS[(value%10)]; delay_ms(3);
+ PORTA = 0x02; PORTD = DIGITS[((value%100)/10)]; delay_ms(3);
+ PORTA = 0x04; PORTD = DIGITS[((value%1000)/100)]; delay_ms(3);
+ PORTA = 0x08; PORTD = DIGITS[(value/1000)]; delay_ms(3);
+}
+
+void display7segChar(unsigned int value, unsigned int digit){
+
+ PORTA = digit; PORTD = LETTERS[value];
+}
+
+void displayClear(){
+ PORTA = 0x01; PORTD = 0x00;
+}
+
+void displayIntSingleDigit(int nb){
+ PORTA = 0x01; PORTD = DIGITS[nb];
+}
+
+void displayStop(){
+ display7segChar(16, 0x08); delay_ms(3);
+ display7segChar(17, 0x04); delay_ms(3);
+ display7segChar(12, 0x02); delay_ms(3);
+ display7segChar(13, 0x01); delay_ms(3);
+}
+
+void displayRun(){
+ display7segChar(15, 0x04);
+ display7segChar(18, 0x02);
+ display7segChar(11, 0x01);
+}
+
+void displayEnd(){
+ display7segChar(4, 0x04); delay_ms(3);
+ display7segChar(11, 0x02); delay_ms(3);
+ display7segChar(3, 0x01); delay_ms(3);
+}
 #line 1 "c:/users/romai/documents/18f4550/nuclear-disintegration appdev/picproject/lib/counting_functions.h"
 
 
@@ -134,12 +216,9 @@ void init_cpt_data(){
 }
 #line 1 "c:/users/romai/documents/18f4550/nuclear-disintegration appdev/picproject/lib/init_functions.h"
 
-
-
-
 void PORTS_Init()
 {
-
+ TRISD = 0x00;
  TRISA = 0x00;
  TRISB = 0xFD;
  TRISC = 0xFF;
@@ -159,6 +238,7 @@ void Interrupt_Init()
  PIE1.RCIE = 1;
 }
 #line 1 "c:/users/romai/documents/18f4550/nuclear-disintegration appdev/picproject/lib/command_manager.h"
+
 
 
 
@@ -203,7 +283,7 @@ void send_state(char state)
  UART_send_data('i');
  }
 }
-#line 41 "C:/Users/romai/Documents/18F4550/Nuclear-Disintegration AppDev/picProject/main.c"
+#line 42 "C:/Users/romai/Documents/18F4550/Nuclear-Disintegration AppDev/picProject/main.c"
 volatile int mode=0;
 volatile int k=1;
 volatile int exitloop = 0;
@@ -217,6 +297,7 @@ volatile int received_k_factor=1;
 
 
 void interrupt(void) {
+
 
 
 
@@ -319,12 +400,13 @@ void interrupt(void) {
 void main() {
 
  PORTS_Init();
-
+ ADC_Init();
  ADCON0 = 0;
  PORTE.B1 = 0;
  PORTE.B2 = 0;
  PORTE.B0 = 0;
  PORTB.B1 = 0;
+
 
  UART1_Init(9600);
 
@@ -335,10 +417,31 @@ void main() {
 
 
  while (exitloop==0){
+ PORTE.B1 = 1;
+ PORTE.B2 = 0;
+ PORTE.B0=mode;
 
+ displayIntSingleDigit(k);
+
+
+
+ if(PORTC.B2==1){
+ if(prevrc2==1){
+ prevrc2=0;
+ mode=0;
+ }
+ else{
+ prevrc2=1;
+ mode=1;
+ }
+ while(PORTC.B2);
+ }
 
 
  while(flagProcess==1){
+ PORTE.B1=0;
+ PORTE.B0=mode;
+ PORTE.B2=1;
 
  if(mode==0){
  if(PORTC.B0==1){
@@ -384,6 +487,32 @@ void main() {
  }
  flagWrite=0;
  INTCON |= 0b11001000;
+ }
+
+ while(PORTC.B1==1){
+ if(prevrc1==0){
+ prevrc1=1;
+ INTCON.RBIE=0;
+ flagProcess = 0;
+ UART_Write('i');
+ UART_Write(0x0D);
+ UART_Write(0x0A);
+ }
+ }
+ }
+
+
+
+ while(PORTC.B1==1){
+ if(prevrc1==1){
+ UART_Write('m');
+ UART_Write(0x0D);
+ UART_Write(0x0A);
+ cpt=0;
+ init_cpt_data();
+ flagProcess = 1;
+ INTCON.RBIE=1;
+ prevrc1=0;
  }
  }
  }

@@ -25,10 +25,9 @@ Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
 File0=main.c
-File1=.\lib\init_functions.h
-File2=.\lib\command_manager.h
-File3=.\lib\UART_functions.h
-Count=4
+File1=..\..\..\..\..\Public\Documents\Mikroelektronika\mikroC PRO for PIC\Defs\P18F4550.c
+File2=.\lib\counting_functions.h
+Count=3
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

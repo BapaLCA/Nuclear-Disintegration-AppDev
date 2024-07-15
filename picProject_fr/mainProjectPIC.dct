@@ -315,8 +315,16 @@ dfn8ee
 dfn8ee_bit
 dfn8ef
 dfn8ef_bit
+digits
 dir_
 dir__bit
+display7segchar
+display7segint
+displayclear
+displayend
+displayintsingledigit
+displayrun
+displaystop
 div_16x16_s
 div_16x16_s_l
 div_16x16_u
@@ -697,6 +705,7 @@ late1
 late1_bit
 late2
 late2_bit
+letters
 longint2double
 longinttohex
 longinttostrwithzeros

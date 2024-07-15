@@ -1,6 +1,6 @@
-////////////////////////// Statistique de comptage - Desintegrations nucléaires /////////////////////////////////////////////
+////////////////////////// Counting Statistics - Nuclear Disintegration - ULB /////////////////////////////////////////////
 
-// Configuration du projet //
+// Project Configuration //
 
 /*
 - PIC18F4550
@@ -9,7 +9,7 @@
 - HS oscillator, PLL enabled
 */
 
-// Librairies a inclure dans le programme //
+// Libraries to include in the code //
 
 /*
 -ADC
@@ -18,10 +18,9 @@
 -UART
 */
 
-// Librairies personelles //
+// Personal Libraries //
 
 #include "lib/UART_functions.h"
-#include "lib/7seg_functions.h"
 #include "lib/counting_functions.h"
 #include "lib/init_functions.h"
 #include "lib/command_manager.h"
@@ -37,78 +36,77 @@
 
 */
 
-// Variables globales //
+// Global variables //
 
-volatile int mode=0; // Defini le mode de mesure / 0 : Erlang / 1 : Poisson / 2 : Piscine
-volatile int k=1; // Nombre d'impulsions a mesurer avant l'arret du compteur (Minimum 1)
-volatile int exitloop = 0; //Pour sortir de la boucle principale
-volatile unsigned int prevrc0 = 1; // etat precedent de RC0 pour detection de front
-volatile unsigned int prevrc1 = 1; // etat precedent de RC1 pour detection de front
-volatile unsigned int prevrc2 = 0; // etat precedent de RC2 pour detection de front
-volatile int flagWrite = 0; // Pour demander l'ecriture des donnees enregistrees
-volatile char singlechar; // Caractère utilisé pour detecter l'arrivée d'une commande recue par UART
-volatile int received_k_factor=1;
+volatile int mode=0; // Defines the measure mode / 0 : Erlang / 1 : Poisson / 2 : Pool
+volatile int k=1; // Amount of pulses before stopping the counter after a first pulse was measured (Minimum 1)
+volatile int exitloop = 0; // Flag to exit the main loop
+volatile unsigned int prevrc0 = 1; // Previous state of RC0 for rising edge detection
+volatile unsigned int prevrc1 = 1; // Previous state of RC1 for rising edge detection
+volatile unsigned int prevrc2 = 0; // Previous state of RC2 for rising edge detection
+volatile int flagWrite = 0; // Flag to send data to UART
+volatile char singlechar; // Char used to detect received command from UART
+volatile int received_k_factor=1; // Flag
 
-////////////////////////////////// Fonction d'Interruption //////////////////////////////////////////
+////////////////////////////////// Interrupt Function //////////////////////////////////////////
 
 void interrupt(void) {
-    // Active ou desactive le comptage lors de l'arrivee d'une impulsion sur RB7
-    // Procede egalement a la sauvegarde et l'envoie des donnees par UART
-    // Cette fonction d'interruption doit rester reservee a RB7, aucune autre pin ne doit etre utilisee
+    // Enables or disables Counting when a pulse is detected on RB7
+    // Manages the saving and sending of data using UART
     
-    if(PIR1.RCIF==1){ // Reception de données pour controler le PIC
-        char received_data = RCREG; // Lire les données reçues
-        PIR1.RCIF = 0; // Réinitialiser le drapeau d'interruption de réception
-        if (received_k_factor) {
+    if(PIR1.RCIF==1){ // Receiving of data for PIC control
+        char received_data = RCREG; // Reads the received data
+        PIR1.RCIF = 0; // Resets the interrupt flag
+        if (received_k_factor) { // If the previous char received was a 'k', we check the value sent to change the k factor
             if (received_data >= '0' && received_data <= '9') {
-                // Conversion du caractère en entier
+                // Converts the char into an int
                 k = received_data - '0';
             }
-            received_k_factor = 0; // Réinitialiser après traitement
+            received_k_factor = 0; // Resets Flag after processing
         } else {
             switch(received_data) {
                 case 'k':
-                    received_k_factor = 1; // On informe le PIC que le prochain caractere sera le facteur k
+                    received_k_factor = 1; // Sets a flag to inform the PIC that the next char to process is the value of the k factor
                     break;
-                case 'g':  // Commande GO pour lancer les mesures
-                    UART_send_data('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
-                    UART_send_data(0x0D); // Saut de ligne
+                case 'g':  // GO command to launch measures
+                    UART_send_data('m'); // Sends a char 'm' meaning the state "Measuring" to Application
+                    UART_send_data(0x0D); // Sends a line breaker
                     UART_send_data(0x0A);
-                    cpt=0;           // On initialise le compteur
-                    init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
-                    flagProcess = 1;    // Met a jour le flag de sortie de boucle
-                    INTCON.RBIE=1; // Active les interruptions sur PORTB en dernier
+                    cpt=0;           // Counter init
+                    init_cpt_data(); // Data tab init
+                    flagProcess = 1;    // Updates the process Flag for the process loop
+                    INTCON.RBIE=1; // Enables interruptions on PORTB
                     break;
-                case 's':  // Commande STOP pour arreter les mesures
+                case 's':  // STOP command to stop measures
                     flagProcess = 0;
-                    INTCON.RBIE=0; // Desactive les interruptions sur PORTB
-                    flagProcess = 0;    // Met a jour le flag de sortie de boucle
-                    UART_send_data('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
-                    UART_send_data(0x0D); // Saut de ligne
+                    INTCON.RBIE=0; // Disables interruptions on PORTB
+                    flagProcess = 0;    // Updates process flag to exit the processing loop
+                    UART_send_data('i'); // Sends a char 'i' meaning the state "Idle" to Application
+                    UART_send_data(0x0D); // Line breaker
                     UART_send_data(0x0A);
                     break;
-                case 'e':  // Commande ERLANG pour selectionner le mode de mesure Erlang
+                case 'e':  // ERLANG command to select the measure mode Erlang
                     mode = 0;
                     break;
-                case 'p':  // Commande POISSON pour selectionner le mode de mesure Poisson
+                case 'p':  // POISSON command to select the measure mode Poisson
                     mode = 1;
                     break;
-                case 'o': // Commande POOL pour selectionner le mode de mesure Piscine
+                case 'o': // POOL command to select the measure mode Pool
                     mode = 2;
                     break;
-                case '?': // Commande pour envoyer l'etat actuel du PIC18F4550
+                case '?': // QUESTION command to ask PIC to send its current state
                     send_state(flagProcess);
-                    UART_send_data(0x0D); // Saut de ligne
+                    UART_send_data(0x0D); // Line breaker
                     UART_send_data(0x0A);
                     break;
-                case 'u': // Commande du mode Piscine pour indiquer la fin d'une mesure
-                    flagWrite = 1; // On indique au PIC la fin du temps d'une mesure
+                case 'u': // Update POOL mode command to end the current measure and send the data measured
+                    flagWrite = 1; // Enable flag Write to send to UART the current measured data
                     break;
-                case 'r': // Commande du mode Piscine pour reset le compteur de mesures
+                case 'r': // Reset POOL mode command to reset the number of measures done
                     measureCount=0;
                     break;
                 default:
-                    // Aucune correspondance, on ignore la/les données reçues
+                    // No char matching, ignoring data received
                     break;
             }
         }
@@ -116,158 +114,110 @@ void interrupt(void) {
     else{
         if(mode==0){ // Erlang
             if(prevrb7==0){
-                cpt = 0;      // Initialisation du compteur
-                cptk = 0;     // Initialisation du compteur d'impulsion
-                flagStart = 1;// Lancement du compteur
-                prevrb7 = 1;  // Sauvegarde de l'etat precedent de RB7
+                cpt = 0;      // Counter Init
+                cptk = 0;     // Pulse Counter Init
+                flagStart = 1;// Launches the counter
+                prevrb7 = 1;  // Saves the previous state of RB7
                 }
             else{
                 cptk++;
-                if(cptk==k){ // Verification du nombre d'impulsion mesurees
-                    flagStart = 0;      // Arret du compteur
-                    prevrb7 = 0;        // Sauvegarde de l'etat precedent du compteur
-                    cpt_data[cpt]++;    // Sauvegarde de la donnee dans le canal correspondant
+                if(cptk==k){ // Check the number of pulses measured
+                    flagStart = 0;      // Stops counter
+                    prevrb7 = 0;        // Saves the previous state of RB7
+                    cpt_data[cpt]++;    // Saves the data in the corresponding index
                     }
                 }
-                if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
-                    INTCON &= 0b00110111; // Desactive les interruptions
-                    flagWrite = 1; // On active le flag d'ecriture des donnees
+                if(cpt_data[cpt]==255){  // When one of the tab cell reaches 255 (8 bits limit), it enables the writing loop and sends all measured data
+                    INTCON &= 0b00110111; // Disable interruptions
+                    flagWrite = 1; // Enables writing Flag
                     }
             }
 
         if(mode==1){ //Poisson
-                Counting(); // Comptage du nombre d'impulsion sur cpt lors de la detection d'une impulsion
+                Counting(); // Counts the number of pulses on cpt variable on pulse detection
             }
 
-        if(mode==2){ // Piscine
-            cpt++; // On compte le nombre d'impulsions, pas de limite de comptage dans ce mode
+        if(mode==2){ // Pool
+            cpt++; // Counts the number of pulses on cpt variable on pulse detection, no call for Counting needed as we have no counting limit on this mode
             }
 
 
-        while(PORTB.B7==1); // On attend que l'impulsion se termine pour sortir de l'interruption (necessaire lors de test par appui sur bouton)
-        INTCON.RBIF = 0; // Reinitialise le flag d'interruption RBIF
+        while(PORTB.B7==1); // Waiting for pulse to be over before quitting interrupt function
+        INTCON.RBIF = 0; // Resets the interrupt flag RBIF
         }
 }
 
 
-////////////////////////////////// Fonction Principale //////////////////////////////////////////
+////////////////////////////////// Main Function //////////////////////////////////////////
 
 void main() {
      // Initialisation
-    PORTS_Init();  // On initialise les differents PORTs
-    ADC_Init(); // On initialise le convertisseur ADC
+    PORTS_Init();  // PORTs init
+    // ADC_Init(); Unused
     ADCON0 = 0;
     PORTE.B1 = 0;
     PORTE.B2 = 0;
     PORTE.B0 = 0;
     PORTB.B1 = 0;
-    // J3 et J4 jumpers doivent etre places sur la position USB
-    // SW1 doit activer le switch RC7 pour RX et SW2 doit activer le switch RC6 pour TX
-    UART1_Init(9600); // Configuration de l'UART a une vitesse en Bauds donnee
+    // RC6 and RC7 must be set as USB-UART (should be the case by default on Ready for PIC)
+    UART1_Init(9600); // UART speed configuration set to 9600 Bauds
 
-    delay_ms(1000); // Attente de la stabilisation de l'UART
-    init_cpt_data();// Initilisation du tableau de donnees
-    Interrupt_Init(); // Configuration des registres d'interruption
-    INTCON.RBIE=0; // Mais on conserve les interruptions desactivees sur PORTB pour le demarrage
+    delay_ms(1000); // Delay to wait for UART to stabilize
+    init_cpt_data();// Data tab init
+    Interrupt_Init(); // Sets up the interrupt registers
+    INTCON.RBIE=0; // PORTB interrupt shall remain disabled on launch
 
-    // Boucle principale
+    // Main Loop
     while (exitloop==0){
-            PORTE.B1 = 1;  // LED1 : A l'arret (Idle)
-            PORTE.B2 = 0;
-            PORTE.B0=mode; // LED0 : Indique le mode de fonctionnement (Erlang ou Poisson)
-            //k=1+ADC_Read(10)/10;      // Conversion de la valeur analogique entre 1 et 9, a re-regler plus tard
-            displayIntSingleDigit(k); // Affichage du k sur le premier digit 7 segments
+            // Mode selection (0 : Erlang, 1 : Poisson, 2 : Pool)
 
-
-            // Selection du mode (0 : Erlang, 1 : Poisson)
-            if(PORTC.B2==1){
-                if(prevrc2==1){
-                    prevrc2=0;
-                    mode=0;
-                    }
-                else{
-                    prevrc2=1;
-                    mode=1;
-                    }
-                while(PORTC.B2);
-                }
-
-            // Boucle de mesure, activee/desactivee lors de l'appui sur le bouton RC1 //
+            // Measuring Loop, enabled/disabled by Application through GO/STOP commands
             while(flagProcess==1){
-                PORTE.B1=0;
-                PORTE.B0=mode; // Affichage du mode de mesure
-                PORTE.B2=1; // LED2 : En cours d'execution
-                // Detection de front montant sur RC0
+
                 if(mode==0){ // Erlang
                     if(PORTC.B0==1){
-                      if(prevrc0==0){
-                          Counting(); // Incrementation du compteur
-                          prevrc0=1;
+                      if(prevrc0==0){ // Rising edge
+                          Counting(); // Increases the counter when a clock rising edge is detected
+                          prevrc0=1; // Saves the previous state of RC0
                           }
                       }
-                      else{
-                          prevrc0=0;  // Sauvegarde du dernier etat de RC0
+                      else{ // Falling edge
+                          prevrc0=0;  // Saves the previous state of RC0
                           }
                 }
-
-                if(mode==1){ // Poisson
+                
+                if(mode==1){ // Poisson Mode
                     flagStart=1;
                     if(PORTC.B0==1){
-                          cpt_data[cpt]++; // Enregistrement sur le canau correspondant au nb d'impulsion mesurees
-                          cpt=0;          // Reset du compteur
-                      while(PORTC.B0); // On attend que le niveau haut d'horloge se termine
+                          cpt_data[cpt]++; // Saves on Index corresponding to the amount of pulses measured
+                          cpt=0;          // Counter reset
+                      while(PORTC.B0); // Waiting for the high level of the clock to end
                       }
 
-                      if(cpt_data[cpt]==255){  // Lorsqu'une cellule du tableau de donnee atteint sa valeur maximale, on envoie les donnees sur le PC
-                          INTCON &= 0b00110111; // Desactive toutes les interruptions pour l'ecriture
-                          flagWrite = 1; // On active le flag d'ecriture des donnees
+                      if(cpt_data[cpt]==255){  // When a cell's value reaches 255 (8 bits limit) the data is sent through UART
+                          INTCON &= 0b00110111; // Disables interruptions for writing
+                          flagWrite = 1; // Enables writing flag
                           }
                 }
                 
                 if(mode==2){ // Piscine
-                    flagStart=1; // Pas de traitement d'entree secondaire dans ce mode
+                    flagStart=1; // No processing on secondary input here
                     }
 
 
-                // Partie commune aux trois modes //
+                // Common part of all modes //
 
-                if(flagWrite==1){ // Pour l'envoie des donnees
-                    if(mode<=1){ // Envoie des donnees sous forme de tableau pour le mode Erlang/Poisson
-                        send_data(); // Envoie les donnees vers le terminal
+                if(flagWrite==1){ // Data sending function
+                    if(mode<=1){ // Sends data in a tab form for modes Erlang/Poisson
+                        send_data(); // Sends data towards UART Terminal
                         init_cpt_data();
                         }
-                    if(mode==2){ // Envoie des donnees sous forme de ligne singuliere pour le mode Piscine
-                        send_data_pool(); // Envoie des donnees vers le terminal
-                        cpt=0; // Reset du compteur uniquement, le tableau cpt_data n'etant pas utilise en mode Piscine
+                    if(mode==2){ // Sends data as a single line for Pool mode
+                        send_data_pool(); // Sends data towards UART Terminal
+                        cpt=0; // Resets counter only, cpt_data is not used in this mode
                         }
                     flagWrite=0;
-                    INTCON |= 0b11001000; // Reactive toutes les interruptions
-                    }
-
-                while(PORTC.B1==1){ // Met en pause les mesures lors de l'appui sur le bouton RC1
-                        if(prevrc1==0){
-                            prevrc1=1;          // Sauvegarde du dernier etat de RC1
-                            INTCON.RBIE=0; // Desactive les interruptions sur PORTB
-                            flagProcess = 0;    // Met a jour le flag de sortie de boucle
-                            UART_Write('i'); // On envoie une commande indiquant l'etat "Idle" a l'app
-                            UART_Write(0x0D); // Saut de ligne
-                            UART_Write(0x0A);
-                        }
-                    }
-                }
-
-
-            // Met en route les mesures lors de l'appui sur le bouton RC1 //
-            while(PORTC.B1==1){
-                if(prevrc1==1){
-                        UART_Write('m'); // On envoie une commande indiquant l'etat "Measuring" a l'app
-                        UART_Write(0x0D); // Saut de ligne
-                        UART_Write(0x0A);
-                        cpt=0;           // On initialise le compteur
-                        init_cpt_data(); // Et on initialise le tableau de donnees avant lancement
-                        flagProcess = 1;    // Met a jour le flag de sortie de boucle
-                        INTCON.RBIE=1; // Active les interruptions sur PORTB en dernier
-                        prevrc1=0;          // Sauvegarde du dernier etat de RC1
+                    INTCON |= 0b11001000; // Enables back all interruptions
                     }
                 }
         }
