@@ -690,21 +690,21 @@ L_end_send_state:
 
 _interrupt:
 
-;main.c,53 :: 		void interrupt(void) {
-;main.c,57 :: 		if(PIR1.RCIF==1){ // Receiving of data for PIC control
+;main.c,42 :: 		void interrupt(void) {
+;main.c,46 :: 		if(PIR1.RCIF==1){ // Receiving of data for PIC control
 	BTFSS       PIR1+0, 5 
 	GOTO        L_interrupt29
-;main.c,58 :: 		char received_data = RCREG; // Reads the received data
+;main.c,47 :: 		char received_data = RCREG; // Reads the received data
 	MOVF        RCREG+0, 0 
 	MOVWF       interrupt_received_data_L1+0 
-;main.c,59 :: 		PIR1.RCIF = 0; // Resets the interrupt flag
+;main.c,48 :: 		PIR1.RCIF = 0; // Resets the interrupt flag
 	BCF         PIR1+0, 5 
-;main.c,60 :: 		if (received_k_factor) { // If the previous char received was a 'k', we check the value sent to change the k factor
+;main.c,49 :: 		if (received_k_factor) { // If the previous char received was a 'k', we check the value sent to change the k factor
 	MOVF        _received_k_factor+0, 0 
 	IORWF       _received_k_factor+1, 0 
 	BTFSC       STATUS+0, 2 
 	GOTO        L_interrupt30
-;main.c,61 :: 		if (received_data >= '0' && received_data <= '9') {
+;main.c,50 :: 		if (received_data >= '0' && received_data <= '9') {
 	MOVLW       48
 	SUBWF       interrupt_received_data_L1+0, 0 
 	BTFSS       STATUS+0, 0 
@@ -714,146 +714,178 @@ _interrupt:
 	BTFSS       STATUS+0, 0 
 	GOTO        L_interrupt33
 L__interrupt75:
-;main.c,63 :: 		k = received_data - '0';
+;main.c,52 :: 		k = received_data - '0';
 	MOVLW       48
 	SUBWF       interrupt_received_data_L1+0, 0 
 	MOVWF       _k+0 
 	CLRF        _k+1 
 	MOVLW       0
 	SUBWFB      _k+1, 1 
-;main.c,64 :: 		}
+;main.c,53 :: 		}
 L_interrupt33:
-;main.c,65 :: 		received_k_factor = 0; // Resets Flag after processing
+;main.c,54 :: 		received_k_factor = 0; // Resets Flag after processing
 	CLRF        _received_k_factor+0 
 	CLRF        _received_k_factor+1 
-;main.c,66 :: 		} else {
+;main.c,55 :: 		} else {
 	GOTO        L_interrupt34
 L_interrupt30:
-;main.c,67 :: 		switch(received_data) {
+;main.c,56 :: 		switch(received_data) {
 	GOTO        L_interrupt35
-;main.c,68 :: 		case 'k':
+;main.c,57 :: 		case 'k':
 L_interrupt37:
-;main.c,69 :: 		received_k_factor = 1; // Sets a flag to inform the PIC that the next char to process is the value of the k factor
+;main.c,58 :: 		received_k_factor = 1; // Sets a flag to inform the PIC that the next char to process is the value of the k factor
 	MOVLW       1
 	MOVWF       _received_k_factor+0 
 	MOVLW       0
 	MOVWF       _received_k_factor+1 
-;main.c,70 :: 		break;
+;main.c,59 :: 		break;
 	GOTO        L_interrupt36
-;main.c,71 :: 		case 'g':  // GO command to launch measures
+;main.c,60 :: 		case 'g':  // GO command to launch measures
 L_interrupt38:
-;main.c,72 :: 		UART_send_data('m'); // Sends a char 'm' meaning the state "Measuring" to Application
+;main.c,61 :: 		UART_send_data('m'); // Sends a char 'm' meaning the state "Measuring" to Application
 	MOVLW       109
 	MOVWF       FARG_UART_send_data_c+0 
 	CALL        _UART_send_data+0, 0
-;main.c,73 :: 		UART_send_data(0x0D); // Sends a line breaker
+;main.c,62 :: 		UART_send_data(0x0D); // Sends a line breaker
 	MOVLW       13
 	MOVWF       FARG_UART_send_data_c+0 
 	CALL        _UART_send_data+0, 0
-;main.c,74 :: 		UART_send_data(0x0A);
+;main.c,63 :: 		UART_send_data(0x0A);
 	MOVLW       10
 	MOVWF       FARG_UART_send_data_c+0 
 	CALL        _UART_send_data+0, 0
-;main.c,75 :: 		cpt=0;           // Counter init
+;main.c,64 :: 		cpt=0;           // Counter init
 	CLRF        _cpt+0 
 	CLRF        _cpt+1 
-;main.c,76 :: 		init_cpt_data(); // Data tab init
+;main.c,65 :: 		init_cpt_data(); // Data tab init
 	CALL        _init_cpt_data+0, 0
-;main.c,77 :: 		flagProcess = 1;    // Updates the process Flag for the process loop
+;main.c,66 :: 		flagProcess = 1;    // Updates the process Flag for the process loop
 	MOVLW       1
 	MOVWF       _flagProcess+0 
 	MOVLW       0
 	MOVWF       _flagProcess+1 
-;main.c,78 :: 		INTCON.RBIE=1; // Enables interruptions on PORTB
+;main.c,67 :: 		INTCON.RBIE=1; // Enables interruptions on PORTB
 	BSF         INTCON+0, 3 
-;main.c,79 :: 		break;
+;main.c,68 :: 		break;
 	GOTO        L_interrupt36
-;main.c,80 :: 		case 's':  // STOP command to stop measures
+;main.c,69 :: 		case 's':  // STOP command to stop measures
 L_interrupt39:
-;main.c,81 :: 		flagProcess = 0;
+;main.c,70 :: 		flagProcess = 0;
 	CLRF        _flagProcess+0 
 	CLRF        _flagProcess+1 
-;main.c,82 :: 		INTCON.RBIE=0; // Disables interruptions on PORTB
+;main.c,71 :: 		INTCON.RBIE=0; // Disables interruptions on PORTB
 	BCF         INTCON+0, 3 
-;main.c,83 :: 		flagProcess = 0;    // Updates process flag to exit the processing loop
+;main.c,72 :: 		flagProcess = 0;    // Updates process flag to exit the processing loop
 	CLRF        _flagProcess+0 
 	CLRF        _flagProcess+1 
-;main.c,84 :: 		UART_send_data('i'); // Sends a char 'i' meaning the state "Idle" to Application
+;main.c,73 :: 		UART_send_data('i'); // Sends a char 'i' meaning the state "Idle" to Application
 	MOVLW       105
 	MOVWF       FARG_UART_send_data_c+0 
 	CALL        _UART_send_data+0, 0
-;main.c,85 :: 		UART_send_data(0x0D); // Line breaker
+;main.c,74 :: 		UART_send_data(0x0D); // Line breaker
 	MOVLW       13
 	MOVWF       FARG_UART_send_data_c+0 
 	CALL        _UART_send_data+0, 0
-;main.c,86 :: 		UART_send_data(0x0A);
+;main.c,75 :: 		UART_send_data(0x0A);
 	MOVLW       10
 	MOVWF       FARG_UART_send_data_c+0 
 	CALL        _UART_send_data+0, 0
-;main.c,87 :: 		break;
+;main.c,76 :: 		break;
 	GOTO        L_interrupt36
-;main.c,88 :: 		case 'e':  // ERLANG command to select the measure mode Erlang
+;main.c,77 :: 		case 'e':  // ERLANG command to select the measure mode Erlang
 L_interrupt40:
-;main.c,89 :: 		mode = 0;
+;main.c,78 :: 		mode = 0;
 	CLRF        _mode+0 
 	CLRF        _mode+1 
-;main.c,90 :: 		break;
+;main.c,79 :: 		break;
 	GOTO        L_interrupt36
-;main.c,91 :: 		case 'p':  // POISSON command to select the measure mode Poisson
+;main.c,80 :: 		case 'p':  // POISSON command to select the measure mode Poisson
 L_interrupt41:
-;main.c,92 :: 		mode = 1;
+;main.c,81 :: 		mode = 1;
 	MOVLW       1
 	MOVWF       _mode+0 
 	MOVLW       0
 	MOVWF       _mode+1 
-;main.c,93 :: 		break;
+;main.c,82 :: 		break;
 	GOTO        L_interrupt36
-;main.c,94 :: 		case 'o': // POOL command to select the measure mode Pool
+;main.c,83 :: 		case 'o': // POOL command to select the measure mode Pool
 L_interrupt42:
-;main.c,95 :: 		mode = 2;
+;main.c,84 :: 		mode = 2;
 	MOVLW       2
 	MOVWF       _mode+0 
 	MOVLW       0
 	MOVWF       _mode+1 
-;main.c,96 :: 		break;
+;main.c,85 :: 		break;
 	GOTO        L_interrupt36
-;main.c,97 :: 		case '?': // QUESTION command to ask PIC to send its current state
+;main.c,86 :: 		case '?': // QUESTION command to ask PIC to send its current state
 L_interrupt43:
-;main.c,98 :: 		send_state(flagProcess);
-	MOVF        _flagProcess+0, 0 
-	MOVWF       FARG_send_state_state+0 
-	CALL        _send_state+0, 0
-;main.c,99 :: 		UART_send_data(0x0D); // Line breaker
+;main.c,87 :: 		UART_send_string("Hello from PIC18F4550 !");
+	MOVLW       ?lstr_1_main+0
+	MOVWF       FARG_UART_send_string_d+0 
+	MOVLW       hi_addr(?lstr_1_main+0)
+	MOVWF       FARG_UART_send_string_d+1 
+	MOVLW       higher_addr(?lstr_1_main+0)
+	MOVWF       FARG_UART_send_string_d+2 
+	CALL        _UART_send_string+0, 0
+;main.c,88 :: 		UART_send_data(0x0D); // Line breaker
 	MOVLW       13
 	MOVWF       FARG_UART_send_data_c+0 
 	CALL        _UART_send_data+0, 0
-;main.c,100 :: 		UART_send_data(0x0A);
+;main.c,89 :: 		UART_send_data(0x0A);
 	MOVLW       10
 	MOVWF       FARG_UART_send_data_c+0 
 	CALL        _UART_send_data+0, 0
-;main.c,101 :: 		break;
+;main.c,90 :: 		UART_send_string("Find my source code at : https://github.com/BapaLCA/Nuclear-Disintegration-AppDev");
+	MOVLW       ?lstr_2_main+0
+	MOVWF       FARG_UART_send_string_d+0 
+	MOVLW       hi_addr(?lstr_2_main+0)
+	MOVWF       FARG_UART_send_string_d+1 
+	MOVLW       higher_addr(?lstr_2_main+0)
+	MOVWF       FARG_UART_send_string_d+2 
+	CALL        _UART_send_string+0, 0
+;main.c,91 :: 		UART_send_data(0x0D); // Line breaker
+	MOVLW       13
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;main.c,92 :: 		UART_send_data(0x0A);
+	MOVLW       10
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;main.c,93 :: 		send_state(flagProcess);
+	MOVF        _flagProcess+0, 0 
+	MOVWF       FARG_send_state_state+0 
+	CALL        _send_state+0, 0
+;main.c,94 :: 		UART_send_data(0x0D); // Line breaker
+	MOVLW       13
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;main.c,95 :: 		UART_send_data(0x0A);
+	MOVLW       10
+	MOVWF       FARG_UART_send_data_c+0 
+	CALL        _UART_send_data+0, 0
+;main.c,96 :: 		break;
 	GOTO        L_interrupt36
-;main.c,102 :: 		case 'u': // Update POOL mode command to end the current measure and send the data measured
+;main.c,97 :: 		case 'u': // Update POOL mode command to end the current measure and send the data measured
 L_interrupt44:
-;main.c,103 :: 		flagWrite = 1; // Enable flag Write to send to UART the current measured data
+;main.c,98 :: 		flagWrite = 1; // Enable flag Write to send to UART the current measured data
 	MOVLW       1
 	MOVWF       _flagWrite+0 
 	MOVLW       0
 	MOVWF       _flagWrite+1 
-;main.c,104 :: 		break;
+;main.c,99 :: 		break;
 	GOTO        L_interrupt36
-;main.c,105 :: 		case 'r': // Reset POOL mode command to reset the number of measures done
+;main.c,100 :: 		case 'r': // Reset POOL mode command to reset the number of measures done
 L_interrupt45:
-;main.c,106 :: 		measureCount=0;
+;main.c,101 :: 		measureCount=0;
 	CLRF        _measureCount+0 
 	CLRF        _measureCount+1 
-;main.c,107 :: 		break;
+;main.c,102 :: 		break;
 	GOTO        L_interrupt36
-;main.c,108 :: 		default:
+;main.c,103 :: 		default:
 L_interrupt46:
-;main.c,110 :: 		break;
+;main.c,105 :: 		break;
 	GOTO        L_interrupt36
-;main.c,111 :: 		}
+;main.c,106 :: 		}
 L_interrupt35:
 	MOVF        interrupt_received_data_L1+0, 0 
 	XORLW       107
@@ -893,12 +925,12 @@ L_interrupt35:
 	GOTO        L_interrupt45
 	GOTO        L_interrupt46
 L_interrupt36:
-;main.c,112 :: 		}
+;main.c,107 :: 		}
 L_interrupt34:
-;main.c,113 :: 		}
+;main.c,108 :: 		}
 	GOTO        L_interrupt47
 L_interrupt29:
-;main.c,115 :: 		if(mode==0){ // Erlang
+;main.c,110 :: 		if(mode==0){ // Erlang
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -908,7 +940,7 @@ L_interrupt29:
 L__interrupt97:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_interrupt48
-;main.c,116 :: 		if(prevrb7==0){
+;main.c,111 :: 		if(prevrb7==0){
 	MOVLW       0
 	XORWF       _prevrb7+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -918,26 +950,26 @@ L__interrupt97:
 L__interrupt98:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_interrupt49
-;main.c,117 :: 		cpt = 0;      // Counter Init
+;main.c,112 :: 		cpt = 0;      // Counter Init
 	CLRF        _cpt+0 
 	CLRF        _cpt+1 
-;main.c,118 :: 		cptk = 0;     // Pulse Counter Init
+;main.c,113 :: 		cptk = 0;     // Pulse Counter Init
 	CLRF        _cptk+0 
 	CLRF        _cptk+1 
-;main.c,119 :: 		flagStart = 1;// Launches the counter
+;main.c,114 :: 		flagStart = 1;// Launches the counter
 	MOVLW       1
 	MOVWF       _flagStart+0 
 	MOVLW       0
 	MOVWF       _flagStart+1 
-;main.c,120 :: 		prevrb7 = 1;  // Saves the previous state of RB7
+;main.c,115 :: 		prevrb7 = 1;  // Saves the previous state of RB7
 	MOVLW       1
 	MOVWF       _prevrb7+0 
 	MOVLW       0
 	MOVWF       _prevrb7+1 
-;main.c,121 :: 		}
+;main.c,116 :: 		}
 	GOTO        L_interrupt50
 L_interrupt49:
-;main.c,123 :: 		cptk++;
+;main.c,118 :: 		cptk++;
 	MOVLW       1
 	ADDWF       _cptk+0, 0 
 	MOVWF       R0 
@@ -948,7 +980,7 @@ L_interrupt49:
 	MOVWF       _cptk+0 
 	MOVF        R1, 0 
 	MOVWF       _cptk+1 
-;main.c,124 :: 		if(cptk==k){ // Check the number of pulses measured
+;main.c,119 :: 		if(cptk==k){ // Check the number of pulses measured
 	MOVF        _cptk+1, 0 
 	XORWF       _k+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -958,13 +990,13 @@ L_interrupt49:
 L__interrupt99:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_interrupt51
-;main.c,125 :: 		flagStart = 0;      // Stops counter
+;main.c,120 :: 		flagStart = 0;      // Stops counter
 	CLRF        _flagStart+0 
 	CLRF        _flagStart+1 
-;main.c,126 :: 		prevrb7 = 0;        // Saves the previous state of RB7
+;main.c,121 :: 		prevrb7 = 0;        // Saves the previous state of RB7
 	CLRF        _prevrb7+0 
 	CLRF        _prevrb7+1 
-;main.c,127 :: 		cpt_data[cpt]++;    // Saves the data in the corresponding index
+;main.c,122 :: 		cpt_data[cpt]++;    // Saves the data in the corresponding index
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       R1 
@@ -980,11 +1012,11 @@ L__interrupt99:
 	MOVFF       R2, FSR1H+0
 	MOVF        R0, 0 
 	MOVWF       POSTINC1+0 
-;main.c,128 :: 		}
+;main.c,123 :: 		}
 L_interrupt51:
-;main.c,129 :: 		}
+;main.c,124 :: 		}
 L_interrupt50:
-;main.c,130 :: 		if(cpt_data[cpt]==255){  // When one of the tab cell reaches 255 (8 bits limit), it enables the writing loop and sends all measured data
+;main.c,125 :: 		if(cpt_data[cpt]==255){  // When one of the tab cell reaches 255 (8 bits limit), it enables the writing loop and sends all measured data
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       FSR0L+0 
@@ -997,19 +1029,19 @@ L_interrupt50:
 	XORLW       255
 	BTFSS       STATUS+0, 2 
 	GOTO        L_interrupt52
-;main.c,131 :: 		INTCON &= 0b00110111; // Disable interruptions
+;main.c,126 :: 		INTCON &= 0b00110111; // Disable interruptions
 	MOVLW       55
 	ANDWF       INTCON+0, 1 
-;main.c,132 :: 		flagWrite = 1; // Enables writing Flag
+;main.c,127 :: 		flagWrite = 1; // Enables writing Flag
 	MOVLW       1
 	MOVWF       _flagWrite+0 
 	MOVLW       0
 	MOVWF       _flagWrite+1 
-;main.c,133 :: 		}
+;main.c,128 :: 		}
 L_interrupt52:
-;main.c,134 :: 		}
+;main.c,129 :: 		}
 L_interrupt48:
-;main.c,136 :: 		if(mode==1){ //Poisson
+;main.c,131 :: 		if(mode==1){ //Poisson
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -1019,11 +1051,11 @@ L_interrupt48:
 L__interrupt100:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_interrupt53
-;main.c,137 :: 		Counting(); // Counts the number of pulses on cpt variable on pulse detection
+;main.c,132 :: 		Counting(); // Counts the number of pulses on cpt variable on pulse detection
 	CALL        _Counting+0, 0
-;main.c,138 :: 		}
+;main.c,133 :: 		}
 L_interrupt53:
-;main.c,140 :: 		if(mode==2){ // Pool
+;main.c,135 :: 		if(mode==2){ // Pool
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -1033,7 +1065,7 @@ L_interrupt53:
 L__interrupt101:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_interrupt54
-;main.c,141 :: 		cpt++; // Counts the number of pulses on cpt variable on pulse detection, no call for Counting needed as we have no counting limit on this mode
+;main.c,136 :: 		cpt++; // Counts the number of pulses on cpt variable on pulse detection, no call for Counting needed as we have no counting limit on this mode
 	MOVLW       1
 	ADDWF       _cpt+0, 0 
 	MOVWF       R0 
@@ -1044,19 +1076,19 @@ L__interrupt101:
 	MOVWF       _cpt+0 
 	MOVF        R1, 0 
 	MOVWF       _cpt+1 
-;main.c,142 :: 		}
+;main.c,137 :: 		}
 L_interrupt54:
-;main.c,145 :: 		while(PORTB.B7==1); // Waiting for pulse to be over before quitting interrupt function
+;main.c,140 :: 		while(PORTB.B7==1); // Waiting for pulse to be over before quitting interrupt function
 L_interrupt55:
 	BTFSS       PORTB+0, 7 
 	GOTO        L_interrupt56
 	GOTO        L_interrupt55
 L_interrupt56:
-;main.c,146 :: 		INTCON.RBIF = 0; // Resets the interrupt flag RBIF
+;main.c,141 :: 		INTCON.RBIF = 0; // Resets the interrupt flag RBIF
 	BCF         INTCON+0, 0 
-;main.c,147 :: 		}
+;main.c,142 :: 		}
 L_interrupt47:
-;main.c,148 :: 		}
+;main.c,143 :: 		}
 L_end_interrupt:
 L__interrupt96:
 	RETFIE      1
@@ -1064,20 +1096,20 @@ L__interrupt96:
 
 _main:
 
-;main.c,153 :: 		void main() {
-;main.c,155 :: 		PORTS_Init();  // PORTs init
+;main.c,148 :: 		void main() {
+;main.c,150 :: 		PORTS_Init();  // PORTs init
 	CALL        _PORTS_Init+0, 0
-;main.c,157 :: 		ADCON0 = 0;
+;main.c,152 :: 		ADCON0 = 0;
 	CLRF        ADCON0+0 
-;main.c,158 :: 		PORTE.B1 = 0;
+;main.c,153 :: 		PORTE.B1 = 0;
 	BCF         PORTE+0, 1 
-;main.c,159 :: 		PORTE.B2 = 0;
+;main.c,154 :: 		PORTE.B2 = 0;
 	BCF         PORTE+0, 2 
-;main.c,160 :: 		PORTE.B0 = 0;
+;main.c,155 :: 		PORTE.B0 = 0;
 	BCF         PORTE+0, 0 
-;main.c,161 :: 		PORTB.B1 = 0;
+;main.c,156 :: 		PORTB.B1 = 0;
 	BCF         PORTB+0, 1 
-;main.c,163 :: 		UART1_Init(9600); // UART speed configuration set to 9600 Bauds
+;main.c,158 :: 		UART1_Init(9600); // UART speed configuration set to 9600 Bauds
 	BSF         BAUDCON+0, 3, 0
 	MOVLW       4
 	MOVWF       SPBRGH+0 
@@ -1085,7 +1117,7 @@ _main:
 	MOVWF       SPBRG+0 
 	BSF         TXSTA+0, 2, 0
 	CALL        _UART1_Init+0, 0
-;main.c,165 :: 		delay_ms(1000); // Delay to wait for UART to stabilize
+;main.c,160 :: 		delay_ms(1000); // Delay to wait for UART to stabilize
 	MOVLW       61
 	MOVWF       R11, 0
 	MOVLW       225
@@ -1101,13 +1133,13 @@ L_main57:
 	BRA         L_main57
 	NOP
 	NOP
-;main.c,166 :: 		init_cpt_data();// Data tab init
+;main.c,161 :: 		init_cpt_data();// Data tab init
 	CALL        _init_cpt_data+0, 0
-;main.c,167 :: 		Interrupt_Init(); // Sets up the interrupt registers
+;main.c,162 :: 		Interrupt_Init(); // Sets up the interrupt registers
 	CALL        _Interrupt_Init+0, 0
-;main.c,168 :: 		INTCON.RBIE=0; // PORTB interrupt shall remain disabled on launch
+;main.c,163 :: 		INTCON.RBIE=0; // PORTB interrupt shall remain disabled on launch
 	BCF         INTCON+0, 3 
-;main.c,171 :: 		while (exitloop==0){
+;main.c,166 :: 		while (exitloop==0){
 L_main58:
 	MOVLW       0
 	XORWF       _exitloop+1, 0 
@@ -1118,7 +1150,7 @@ L_main58:
 L__main103:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main59
-;main.c,175 :: 		while(flagProcess==1){
+;main.c,170 :: 		while(flagProcess==1){
 L_main60:
 	MOVLW       0
 	XORWF       _flagProcess+1, 0 
@@ -1129,7 +1161,7 @@ L_main60:
 L__main104:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main61
-;main.c,177 :: 		if(mode==0){ // Erlang
+;main.c,172 :: 		if(mode==0){ // Erlang
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -1139,10 +1171,10 @@ L__main104:
 L__main105:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main62
-;main.c,178 :: 		if(PORTC.B0==1){
+;main.c,173 :: 		if(PORTC.B0==1){
 	BTFSS       PORTC+0, 0 
 	GOTO        L_main63
-;main.c,179 :: 		if(prevrc0==0){ // Rising edge
+;main.c,174 :: 		if(prevrc0==0){ // Rising edge
 	MOVLW       0
 	XORWF       _prevrc0+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -1152,26 +1184,26 @@ L__main105:
 L__main106:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main64
-;main.c,180 :: 		Counting(); // Increases the counter when a clock rising edge is detected
+;main.c,175 :: 		Counting(); // Increases the counter when a clock rising edge is detected
 	CALL        _Counting+0, 0
-;main.c,181 :: 		prevrc0=1; // Saves the previous state of RC0
+;main.c,176 :: 		prevrc0=1; // Saves the previous state of RC0
 	MOVLW       1
 	MOVWF       _prevrc0+0 
 	MOVLW       0
 	MOVWF       _prevrc0+1 
-;main.c,182 :: 		}
+;main.c,177 :: 		}
 L_main64:
-;main.c,183 :: 		}
+;main.c,178 :: 		}
 	GOTO        L_main65
 L_main63:
-;main.c,185 :: 		prevrc0=0;  // Saves the previous state of RC0
+;main.c,180 :: 		prevrc0=0;  // Saves the previous state of RC0
 	CLRF        _prevrc0+0 
 	CLRF        _prevrc0+1 
-;main.c,186 :: 		}
+;main.c,181 :: 		}
 L_main65:
-;main.c,187 :: 		}
+;main.c,182 :: 		}
 L_main62:
-;main.c,189 :: 		if(mode==1){ // Poisson Mode
+;main.c,184 :: 		if(mode==1){ // Poisson Mode
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -1181,15 +1213,15 @@ L_main62:
 L__main107:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main66
-;main.c,190 :: 		flagStart=1;
+;main.c,185 :: 		flagStart=1;
 	MOVLW       1
 	MOVWF       _flagStart+0 
 	MOVLW       0
 	MOVWF       _flagStart+1 
-;main.c,191 :: 		if(PORTC.B0==1){
+;main.c,186 :: 		if(PORTC.B0==1){
 	BTFSS       PORTC+0, 0 
 	GOTO        L_main67
-;main.c,192 :: 		cpt_data[cpt]++; // Saves on Index corresponding to the amount of pulses measured
+;main.c,187 :: 		cpt_data[cpt]++; // Saves on Index corresponding to the amount of pulses measured
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       R1 
@@ -1205,18 +1237,18 @@ L__main107:
 	MOVFF       R2, FSR1H+0
 	MOVF        R0, 0 
 	MOVWF       POSTINC1+0 
-;main.c,193 :: 		cpt=0;          // Counter reset
+;main.c,188 :: 		cpt=0;          // Counter reset
 	CLRF        _cpt+0 
 	CLRF        _cpt+1 
-;main.c,194 :: 		while(PORTC.B0); // Waiting for the high level of the clock to end
+;main.c,189 :: 		while(PORTC.B0); // Waiting for the high level of the clock to end
 L_main68:
 	BTFSS       PORTC+0, 0 
 	GOTO        L_main69
 	GOTO        L_main68
 L_main69:
-;main.c,195 :: 		}
+;main.c,190 :: 		}
 L_main67:
-;main.c,197 :: 		if(cpt_data[cpt]==255){  // When a cell's value reaches 255 (8 bits limit) the data is sent through UART
+;main.c,192 :: 		if(cpt_data[cpt]==255){  // When a cell's value reaches 255 (8 bits limit) the data is sent through UART
 	MOVLW       _cpt_data+0
 	ADDWF       _cpt+0, 0 
 	MOVWF       FSR0L+0 
@@ -1229,19 +1261,19 @@ L_main67:
 	XORLW       255
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main70
-;main.c,198 :: 		INTCON &= 0b00110111; // Disables interruptions for writing
+;main.c,193 :: 		INTCON &= 0b00110111; // Disables interruptions for writing
 	MOVLW       55
 	ANDWF       INTCON+0, 1 
-;main.c,199 :: 		flagWrite = 1; // Enables writing flag
+;main.c,194 :: 		flagWrite = 1; // Enables writing flag
 	MOVLW       1
 	MOVWF       _flagWrite+0 
 	MOVLW       0
 	MOVWF       _flagWrite+1 
-;main.c,200 :: 		}
+;main.c,195 :: 		}
 L_main70:
-;main.c,201 :: 		}
+;main.c,196 :: 		}
 L_main66:
-;main.c,203 :: 		if(mode==2){ // Piscine
+;main.c,198 :: 		if(mode==2){ // Piscine
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -1251,14 +1283,14 @@ L_main66:
 L__main108:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main71
-;main.c,204 :: 		flagStart=1; // No processing on secondary input here
+;main.c,199 :: 		flagStart=1; // No processing on secondary input here
 	MOVLW       1
 	MOVWF       _flagStart+0 
 	MOVLW       0
 	MOVWF       _flagStart+1 
-;main.c,205 :: 		}
+;main.c,200 :: 		}
 L_main71:
-;main.c,210 :: 		if(flagWrite==1){ // Data sending function
+;main.c,205 :: 		if(flagWrite==1){ // Data sending function
 	MOVLW       0
 	XORWF       _flagWrite+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -1268,7 +1300,7 @@ L_main71:
 L__main109:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main72
-;main.c,211 :: 		if(mode<=1){ // Sends data in a tab form for modes Erlang/Poisson
+;main.c,206 :: 		if(mode<=1){ // Sends data in a tab form for modes Erlang/Poisson
 	MOVLW       128
 	MOVWF       R0 
 	MOVLW       128
@@ -1281,13 +1313,13 @@ L__main109:
 L__main110:
 	BTFSS       STATUS+0, 0 
 	GOTO        L_main73
-;main.c,212 :: 		send_data(); // Sends data towards UART Terminal
+;main.c,207 :: 		send_data(); // Sends data towards UART Terminal
 	CALL        _send_data+0, 0
-;main.c,213 :: 		init_cpt_data();
+;main.c,208 :: 		init_cpt_data();
 	CALL        _init_cpt_data+0, 0
-;main.c,214 :: 		}
+;main.c,209 :: 		}
 L_main73:
-;main.c,215 :: 		if(mode==2){ // Sends data as a single line for Pool mode
+;main.c,210 :: 		if(mode==2){ // Sends data as a single line for Pool mode
 	MOVLW       0
 	XORWF       _mode+1, 0 
 	BTFSS       STATUS+0, 2 
@@ -1297,28 +1329,28 @@ L_main73:
 L__main111:
 	BTFSS       STATUS+0, 2 
 	GOTO        L_main74
-;main.c,216 :: 		send_data_pool(); // Sends data towards UART Terminal
+;main.c,211 :: 		send_data_pool(); // Sends data towards UART Terminal
 	CALL        _send_data_pool+0, 0
-;main.c,217 :: 		cpt=0; // Resets counter only, cpt_data is not used in this mode
+;main.c,212 :: 		cpt=0; // Resets counter only, cpt_data is not used in this mode
 	CLRF        _cpt+0 
 	CLRF        _cpt+1 
-;main.c,218 :: 		}
+;main.c,213 :: 		}
 L_main74:
-;main.c,219 :: 		flagWrite=0;
+;main.c,214 :: 		flagWrite=0;
 	CLRF        _flagWrite+0 
 	CLRF        _flagWrite+1 
-;main.c,220 :: 		INTCON |= 0b11001000; // Enables back all interruptions
+;main.c,215 :: 		INTCON |= 0b11001000; // Enables back all interruptions
 	MOVLW       200
 	IORWF       INTCON+0, 1 
-;main.c,221 :: 		}
+;main.c,216 :: 		}
 L_main72:
-;main.c,222 :: 		}
+;main.c,217 :: 		}
 	GOTO        L_main60
 L_main61:
-;main.c,223 :: 		}
+;main.c,218 :: 		}
 	GOTO        L_main58
 L_main59:
-;main.c,224 :: 		}
+;main.c,219 :: 		}
 L_end_main:
 	GOTO        $+0
 ; end of _main

@@ -60,7 +60,7 @@ class Chronometer:
             # Check if a multiple of the Delay set has elapsed and call the callback function
             if elapsed_seconds % self.update_time == 0 and elapsed_seconds != self.last_notified_second:
                 self.last_notified_second = elapsed_seconds
-                if self.callback and self.mode == "Piscine":
+                if self.callback and self.mode == "Activation":
                     self.callback()
                 
         self.root.after(50, self.update_clock)  # Update the timer every 50 ms

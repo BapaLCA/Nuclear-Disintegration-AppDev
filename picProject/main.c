@@ -25,17 +25,6 @@
 #include "lib/init_functions.h"
 #include "lib/command_manager.h"
 
-// Guide //
-
-/*
-    Le programme commence en position Idle :
--Choisissez le mode de mesure Erlang/Poisson avec le bouton RC2 : La LED RE0 indique le mode (eteinte : Erlang, allumee : Poisson)
--Pour le mode Erlang : Utilisez le potentiometre P2 pour regler le k (nb d'impulsion a relever), sa valeur s'affiche sur l'afficheur 7 segments
--Demarrez les mesures avec le bouton RC1 : La LED RE2 s'allumera pour indiquer la position Run du programme
--Vous pouvez mettre en pause les mesures a tout moment avec RC1, la LED RE2 s'eteindra pour indiquer la position Idle du programme
-
-*/
-
 // Global variables //
 
 volatile int mode=0; // Defines the measure mode / 0 : Erlang / 1 : Poisson / 2 : Pool
@@ -95,6 +84,12 @@ void interrupt(void) {
                     mode = 2;
                     break;
                 case '?': // QUESTION command to ask PIC to send its current state
+                    UART_send_string("Hello from PIC18F4550 !");
+                    UART_send_data(0x0D); // Line breaker
+                    UART_send_data(0x0A);
+                    UART_send_string("Find my source code at : https://github.com/BapaLCA/Nuclear-Disintegration-AppDev");
+                    UART_send_data(0x0D); // Line breaker
+                    UART_send_data(0x0A);
                     send_state(flagProcess);
                     UART_send_data(0x0D); // Line breaker
                     UART_send_data(0x0A);

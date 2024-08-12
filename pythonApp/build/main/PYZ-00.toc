@@ -1109,6 +1109,10 @@
    'C:\\Users\\romai\\Documents\\18F4550\\Nuclear-Disintegration '
    'AppDev\\pythonApp\\modules\\controller.py',
    'PYMODULE'),
+  ('modules.fileManaging',
+   'C:\\Users\\romai\\Documents\\18F4550\\Nuclear-Disintegration '
+   'AppDev\\pythonApp\\modules\\fileManaging.py',
+   'PYMODULE'),
   ('modules.fitFunctions',
    'C:\\Users\\romai\\Documents\\18F4550\\Nuclear-Disintegration '
    'AppDev\\pythonApp\\modules\\fitFunctions.py',
@@ -1116,6 +1120,10 @@
   ('modules.objects',
    'C:\\Users\\romai\\Documents\\18F4550\\Nuclear-Disintegration '
    'AppDev\\pythonApp\\modules\\objects.py',
+   'PYMODULE'),
+  ('modules.plotManaging',
+   'C:\\Users\\romai\\Documents\\18F4550\\Nuclear-Disintegration '
+   'AppDev\\pythonApp\\modules\\plotManaging.py',
    'PYMODULE'),
   ('modules.terminalUART',
    'C:\\Users\\romai\\Documents\\18F4550\\Nuclear-Disintegration '

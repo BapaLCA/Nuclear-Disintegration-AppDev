@@ -203,7 +203,7 @@ void send_state(char state)
  UART_send_data('i');
  }
 }
-#line 41 "C:/Users/romai/Documents/18F4550/Nuclear-Disintegration AppDev/picProject/main.c"
+#line 30 "C:/Users/romai/Documents/18F4550/Nuclear-Disintegration AppDev/picProject/main.c"
 volatile int mode=0;
 volatile int k=1;
 volatile int exitloop = 0;
@@ -261,6 +261,12 @@ void interrupt(void) {
  mode = 2;
  break;
  case '?':
+ UART_send_string("Hello from PIC18F4550 !");
+ UART_send_data(0x0D);
+ UART_send_data(0x0A);
+ UART_send_string("Find my source code at : https://github.com/BapaLCA/Nuclear-Disintegration-AppDev");
+ UART_send_data(0x0D);
+ UART_send_data(0x0A);
  send_state(flagProcess);
  UART_send_data(0x0D);
  UART_send_data(0x0A);

@@ -26,6 +26,8 @@ main
 interrupt
 	UART_send_data
 	init_cpt_data
+	UART_send_string
+		UART_send_char
 	send_state
 		UART_send_data
 	Counting

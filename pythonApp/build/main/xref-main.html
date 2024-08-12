@@ -6932,7 +6932,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#importlib.metadata">importlib.metadata</a>
- &#8226;   <a href="#modules.controller">modules.controller</a>
+ &#8226;   <a href="#modules.fileManaging">modules.fileManaging</a>
  &#8226;   <a href="#setuptools._vendor.importlib_metadata">setuptools._vendor.importlib_metadata</a>
 
   </div>
@@ -16468,6 +16468,7 @@ imported by:
  &#8226;   <a href="#matplotlib.figure">matplotlib.figure</a>
  &#8226;   <a href="#matplotlib.image">matplotlib.image</a>
  &#8226;   <a href="#modules.controller">modules.controller</a>
+ &#8226;   <a href="#modules.fitFunctions">modules.fitFunctions</a>
  &#8226;   <a href="#scipy.spatial._plotutils">scipy.spatial._plotutils</a>
  &#8226;   <a href="#scipy.stats._fit">scipy.stats._fit</a>
  &#8226;   <a href="#scipy.stats._survival">scipy.stats._survival</a>
@@ -17250,8 +17251,10 @@ imported by:
 <span class="moduletype">NamespacePackage</span>  <div class="import">
 imported by:
     <a href="#modules.controller">modules.controller</a>
+ &#8226;   <a href="#modules.fileManaging">modules.fileManaging</a>
  &#8226;   <a href="#modules.fitFunctions">modules.fitFunctions</a>
  &#8226;   <a href="#modules.objects">modules.objects</a>
+ &#8226;   <a href="#modules.plotManaging">modules.plotManaging</a>
  &#8226;   <a href="#modules.terminalUART">modules.terminalUART</a>
 
   </div>
@@ -17263,17 +17266,16 @@ imported by:
   <a target="code" href="///C:/Users/romai/Documents/18F4550/Nuclear-Disintegration%20AppDev/pythonApp/modules/controller.py" type="text/plain"><tt>modules.controller</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
-    <a href="#csv">csv</a>
- &#8226;   <a href="#matplotlib.backends.backend_tkagg">matplotlib.backends.backend_tkagg</a>
+    <a href="#matplotlib.backends.backend_tkagg">matplotlib.backends.backend_tkagg</a>
  &#8226;   <a href="#matplotlib.pyplot">matplotlib.pyplot</a>
  &#8226;   <a href="#modules">modules</a>
- &#8226;   <a href="#modules.fitFunctions">modules.fitFunctions</a>
+ &#8226;   <a href="#modules.fileManaging">modules.fileManaging</a>
  &#8226;   <a href="#modules.objects">modules.objects</a>
+ &#8226;   <a href="#modules.plotManaging">modules.plotManaging</a>
  &#8226;   <a href="#modules.terminalUART">modules.terminalUART</a>
  &#8226;   <a href="#numpy">numpy</a>
  &#8226;   <a href="#time">time</a>
  &#8226;   <a href="#tkinter">tkinter</a>
- &#8226;   <a href="#tkinter.filedialog">tkinter.filedialog</a>
  &#8226;   <a href="#tkinter.messagebox">tkinter.messagebox</a>
  &#8226;   <a href="#tkinter.ttk">tkinter.ttk</a>
 
@@ -17287,20 +17289,43 @@ imported by:
 </div>
 
 <div class="node">
+  <a name="modules.fileManaging"></a>
+  <a target="code" href="///C:/Users/romai/Documents/18F4550/Nuclear-Disintegration%20AppDev/pythonApp/modules/fileManaging.py" type="text/plain"><tt>modules.fileManaging</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#csv">csv</a>
+ &#8226;   <a href="#modules">modules</a>
+ &#8226;   <a href="#modules.objects">modules.objects</a>
+ &#8226;   <a href="#tkinter">tkinter</a>
+ &#8226;   <a href="#tkinter.filedialog">tkinter.filedialog</a>
+ &#8226;   <a href="#tkinter.messagebox">tkinter.messagebox</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#modules.controller">modules.controller</a>
+
+  </div>
+
+</div>
+
+<div class="node">
   <a name="modules.fitFunctions"></a>
   <a target="code" href="///C:/Users/romai/Documents/18F4550/Nuclear-Disintegration%20AppDev/pythonApp/modules/fitFunctions.py" type="text/plain"><tt>modules.fitFunctions</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#math">math</a>
+ &#8226;   <a href="#matplotlib.pyplot">matplotlib.pyplot</a>
  &#8226;   <a href="#modules">modules</a>
  &#8226;   <a href="#numpy">numpy</a>
+ &#8226;   <a href="#scipy.interpolate">scipy.interpolate</a>
  &#8226;   <a href="#scipy.optimize">scipy.optimize</a>
  &#8226;   <a href="#scipy.stats">scipy.stats</a>
 
   </div>
   <div class="import">
 imported by:
-    <a href="#modules.controller">modules.controller</a>
+    <a href="#modules.plotManaging">modules.plotManaging</a>
 
   </div>
 
@@ -17316,6 +17341,27 @@ imports:
  &#8226;   <a href="#time">time</a>
  &#8226;   <a href="#tkinter">tkinter</a>
  &#8226;   <a href="#tkinter.simpledialog">tkinter.simpledialog</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#modules.controller">modules.controller</a>
+ &#8226;   <a href="#modules.fileManaging">modules.fileManaging</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="modules.plotManaging"></a>
+  <a target="code" href="///C:/Users/romai/Documents/18F4550/Nuclear-Disintegration%20AppDev/pythonApp/modules/plotManaging.py" type="text/plain"><tt>modules.plotManaging</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#modules">modules</a>
+ &#8226;   <a href="#modules.fitFunctions">modules.fitFunctions</a>
+ &#8226;   <a href="#numpy">numpy</a>
+ &#8226;   <a href="#tkinter">tkinter</a>
+ &#8226;   <a href="#tkinter.messagebox">tkinter.messagebox</a>
 
   </div>
   <div class="import">
@@ -18665,6 +18711,7 @@ imported by:
  &#8226;   <a href="#matplotlib.widgets">matplotlib.widgets</a>
  &#8226;   <a href="#modules.controller">modules.controller</a>
  &#8226;   <a href="#modules.fitFunctions">modules.fitFunctions</a>
+ &#8226;   <a href="#modules.plotManaging">modules.plotManaging</a>
  &#8226;   <a href="#mpl_toolkits.mplot3d.art3d">mpl_toolkits.mplot3d.art3d</a>
  &#8226;   <a href="#mpl_toolkits.mplot3d.axes3d">mpl_toolkits.mplot3d.axes3d</a>
  &#8226;   <a href="#mpl_toolkits.mplot3d.axis3d">mpl_toolkits.mplot3d.axis3d</a>
@@ -29650,7 +29697,8 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#scipy.integrate._bvp">scipy.integrate._bvp</a>
+    <a href="#modules.fitFunctions">modules.fitFunctions</a>
+ &#8226;   <a href="#scipy.integrate._bvp">scipy.integrate._bvp</a>
  &#8226;   <a href="#scipy.interpolate">scipy.interpolate</a>
  &#8226;   <a href="#scipy.interpolate._bspl">scipy.interpolate._bspl</a>
  &#8226;   <a href="#scipy.interpolate._bsplines">scipy.interpolate._bsplines</a>
@@ -44654,7 +44702,9 @@ imported by:
     <a href="#main.py">main.py</a>
  &#8226;   <a href="#matplotlib.backends._backend_tk">matplotlib.backends._backend_tk</a>
  &#8226;   <a href="#modules.controller">modules.controller</a>
+ &#8226;   <a href="#modules.fileManaging">modules.fileManaging</a>
  &#8226;   <a href="#modules.objects">modules.objects</a>
+ &#8226;   <a href="#modules.plotManaging">modules.plotManaging</a>
  &#8226;   <a href="#modules.terminalUART">modules.terminalUART</a>
  &#8226;   <a href="#tkinter.commondialog">tkinter.commondialog</a>
  &#8226;   <a href="#tkinter.constants">tkinter.constants</a>
@@ -44738,7 +44788,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#matplotlib.backends._backend_tk">matplotlib.backends._backend_tk</a>
- &#8226;   <a href="#modules.controller">modules.controller</a>
+ &#8226;   <a href="#modules.fileManaging">modules.fileManaging</a>
 
   </div>
 
@@ -44774,6 +44824,8 @@ imports:
 imported by:
     <a href="#matplotlib.backends._backend_tk">matplotlib.backends._backend_tk</a>
  &#8226;   <a href="#modules.controller">modules.controller</a>
+ &#8226;   <a href="#modules.fileManaging">modules.fileManaging</a>
+ &#8226;   <a href="#modules.plotManaging">modules.plotManaging</a>
  &#8226;   <a href="#modules.terminalUART">modules.terminalUART</a>
  &#8226;   <a href="#tkinter">tkinter</a>
  &#8226;   <a href="#tkinter.simpledialog">tkinter.simpledialog</a>

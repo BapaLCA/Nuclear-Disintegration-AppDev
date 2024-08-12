@@ -18,31 +18,25 @@ def add_erlang_fit(ax, data, time, k_value, period):
     try:
         # Limit X values to the length of the data
         keys = keys[keys <= len(data) * period]
-
-        # Normalise the keys to avoid too small lambd value (does not work, factor set to 1 for now, min frequency is about 21kHz before errors)
-        scaling_factor = 1 
-        keys_normalized = keys / scaling_factor
-
+        
         # Adjusting Erlang function to the data with lambd limits
-        popt, _ = curve_fit(lambda x, A, lambd: erlang_pdf(x, A, k_value, lambd), keys_normalized, values, p0=[max(values), 0.1], bounds=(0, [np.inf, 1]))
-
+        popt, _ = curve_fit(lambda x, A, lambd: erlang_pdf(x, A, k_value, lambd), keys, values, p0=[max(values), 0.1])
+        
         # Recovering the optimal parameters (only lambda, as k is already known)
         A_optimal, lambd_optimal = popt
-        lambd_optimal /= scaling_factor  # Rescaling lambda to the initial scale
-
+        
         # Generate points for X axis
         x_data = np.linspace(min(keys), min(len(data) * period, max(keys)), 1000)
-
+        
         # Calculating the points of the Erlang function
         y_data = erlang_pdf(x_data, A_optimal, k_value, lambd_optimal)
-
+        
         # Plotting erlang function
         ax.plot(x_data, y_data, color='red', linewidth=2, label=f'Erlang Fit (k={k_value}, λ={lambd_optimal:.6f}, A={round(A_optimal, 2)})')
     except RuntimeError as e:
         print(f"Erreur d'ajustement pour k={k_value}: {e}")
     except Exception as e:
         print(f"Erreur inattendue: {e}")
-
     return x_data, y_data # Returns the fitting X and Y for saving to csv option
 
 def gauss(x, a, x0, sigma):

@@ -8,6 +8,7 @@ from modules.fileManaging import open_file, save_to_csv, choose_fit
 import numpy as np
 import time
 from modules.objects import Chronometer, CustomDialog
+import time
 
 class controller(tk.Frame):
     def __init__(self, parent, right_frame, uart_terminal):
@@ -36,7 +37,8 @@ class controller(tk.Frame):
         self.connect_button.config(text="Connected")
         pic_control.update_buttons_state() # If terminal is connected, enables control buttons
         uart_terminal.send_data('?') # Asking PIC its current state (PIC ignores the first char on laucnh, not sure why)
-        uart_terminal.send_data('?')
+        uart_terminal.send_daat('?')
+        time.sleep(1)   
         if uart_terminal.check_status!='i': # If PIC is not on Idle on App launch, asking for it to stop and go to Idle mode
             uart_terminal.send_data('s')
 
@@ -211,7 +213,7 @@ class controlPIC(tk.Frame):
         self.label1 = ttk.Label(self, text="Function Mode")
         self.label1.grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.label2 = ttk.Label(self, text="K factor")
-        self.label3 = ttk.Label(self, text="Measure Delay")
+        self.label3 = ttk.Label(self, text="Measure Delay (seconds)")
         
 
         # Setup the grid for it to expand and resize every widgets
@@ -235,7 +237,7 @@ class controlPIC(tk.Frame):
         # Menu for Measure Mode selection
         self.mode_var = StringVar(self)
         self.mode_var.set("-")
-        self.mode_options = ["Erlang", "Poisson", "Piscine"]
+        self.mode_options = ["Erlang", "Poisson", "Activation"]
         self.mode_menu = OptionMenu(self, self.mode_var, *self.mode_options)
         self.mode_menu.config(width=7)
         self.mode_menu.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
@@ -275,7 +277,7 @@ class controlPIC(tk.Frame):
 
             if mode == "Erlang":  # Check if parameters are set up correctly
                 if "1" <= factor <= "9":
-                    if(1 <= freq <= 50000):
+                    if(25000 <= freq <= 50000):
                         self.send_character('g')
                         self.chrono.start()
                         self.buttons[0].grid_forget()
@@ -283,7 +285,7 @@ class controlPIC(tk.Frame):
                         self.mode_menu.config(state=tk.DISABLED)
                         self.factor_menu.config(state=tk.DISABLED)
                     else:
-                        messagebox.showinfo("Configuration error", "Frequence must be set between 1 Hz and 50 000 Hz!")
+                        messagebox.showinfo("Configuration error", "Frequence must be set between 25 000 Hz and 50 000 Hz!")
                 else:
                     messagebox.showinfo("Configuration error", "Factor k must be set!")
             elif mode == "Poisson": # Check if parameters are set up correctly
@@ -295,7 +297,7 @@ class controlPIC(tk.Frame):
                     self.mode_menu.config(state=tk.DISABLED)
                 else:
                     messagebox.showinfo("Configuration error", "Frequence must be set between 1 Hz and 50 000 Hz!")
-            elif mode == "Piscine": # Check if parameters are set up correctly
+            elif mode == "Activation": # Check if parameters are set up correctly
                 if("1" <= self.delay_var.get() <= "9"):
                     self.send_character('g')
                     self.chrono.start()
@@ -385,7 +387,7 @@ class controlPIC(tk.Frame):
                 self.graph_control.fit_gaussian.set(False)
                 self.graph_control.fit_poisson.set(False)
                 self.graph_control.fit_exponential.set(False)
-            elif mode == "Piscine":
+            elif mode == "Activation":
                 self.uart_terminal.send_data('o')
                 self.factor_menu.grid_forget() # Disables the access to k factor
                 self.graph_control.button_gaussian.config(state=tk.DISABLED)
@@ -397,7 +399,7 @@ class controlPIC(tk.Frame):
                 self.factor_menu.grid_forget()
                 self.reset_pool_button.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
                 self.delay_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
-                self.chrono.mode = "Piscine"
+                self.chrono.mode = "Activation"
                 self.graph_control.fit_erlang.set(False)
                 self.graph_control.fit_gaussian.set(False)
                 self.graph_control.fit_poisson.set(False)

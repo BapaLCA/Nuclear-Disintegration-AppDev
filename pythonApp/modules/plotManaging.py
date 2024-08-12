@@ -21,7 +21,7 @@ def handle_erlang_mode(control_graph):
 
         control_graph.ax.clear()
         control_graph.ax.plot(control_graph.time, control_graph.data, label='Measured Data')
-        control_graph.ax.set_title(f"Time elapsed between {control_graph.factor_k+1} atom disintegrations")  # Title
+        control_graph.ax.set_title(f"Time elapsed between {control_graph.factor_k+1} nuclei disintegrations")  # Title
         control_graph.ax.set_xlabel('Time (microseconds)')  # X Axis
         control_graph.ax.set_ylabel('Iterance')  # Y Axis
         control_graph.ax.grid(True)  # Display grid
@@ -54,7 +54,7 @@ def handle_piscine_mode(control_graph):
 
         control_graph.ax.clear()
         control_graph.ax.plot(control_graph.time, control_graph.data, label='Measured Data')
-        control_graph.ax.set_title(f"Number of atom disintegrations measured VS Time elapsed")  # Title
+        control_graph.ax.set_title(f"Number of nuclei decays measured VS Time elapsed")  # Title
         control_graph.ax.set_xlabel('Time (seconds)')  # X axis
         control_graph.ax.set_ylabel('Number of disintegrations')  # Y axis
         control_graph.ax.grid(True)  # Display grid
@@ -85,8 +85,8 @@ def handle_default_mode(control_graph):
 
         control_graph.ax.clear()
         control_graph.ax.plot(control_graph.data, label='Measured Data')
-        control_graph.ax.set_title(f"Number of atom disintegrations measured in {1/int(control_graph.entry.get())*1000} ms")  # Title
-        control_graph.ax.set_xlabel('Number of atom disintegrations')  # X axis
+        control_graph.ax.set_title(f"Number of nuclei decays measured in {1/int(control_graph.entry.get())*1000} ms")  # Title
+        control_graph.ax.set_xlabel('Number of nuclei decays')  # X axis
         control_graph.ax.set_ylabel('Iteration')  # Y axis
         control_graph.ax.grid(True)  # Display grid
         
@@ -110,7 +110,7 @@ def update_plot(control_graph):
         # Calls the corresponding function depending on mode
         if control_graph.mode == "Erlang":
             handle_erlang_mode(control_graph)
-        elif control_graph.mode == "Piscine":
+        elif control_graph.mode == "Activation":
             handle_piscine_mode(control_graph)
         else: # Uses Poisson mode as default
             handle_default_mode(control_graph)
