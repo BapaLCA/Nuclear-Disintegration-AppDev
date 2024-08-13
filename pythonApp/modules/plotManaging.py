@@ -51,13 +51,14 @@ def handle_piscine_mode(control_graph):
         # Adjust X axis limit to zoom in on none-null values
         min_index = min(non_zero_indices)
         max_index = max(non_zero_indices)
-
+        
         control_graph.ax.clear()
-        control_graph.ax.plot(control_graph.time, control_graph.data, label='Measured Data')
-        control_graph.ax.set_title(f"Number of nuclei decays measured VS Time elapsed")  # Title
+        control_graph.ax.plot(control_graph.time, control_graph.data, '.', label='Measured Data')  # Display data as scatter
+        control_graph.ax.set_title("Number of nuclei decays measured VS Time elapsed")  # Title
         control_graph.ax.set_xlabel('Time (seconds)')  # X axis
         control_graph.ax.set_ylabel('Number of disintegrations')  # Y axis
-        control_graph.ax.grid(True)  # Display grid
+        control_graph.ax.grid(True)
+        control_graph.ax.legend() 
 
         # Checks if fitting functions are enabled
         if control_graph.fit_erlang.get():
@@ -84,7 +85,7 @@ def handle_default_mode(control_graph):
         max_index = max(non_zero_indices)
 
         control_graph.ax.clear()
-        control_graph.ax.plot(control_graph.data, label='Measured Data')
+        control_graph.ax.plot(control_graph.data, '.', label='Measured Data')
         control_graph.ax.set_title(f"Number of nuclei decays measured in {1/int(control_graph.entry.get())*1000} ms")  # Title
         control_graph.ax.set_xlabel('Number of nuclei decays')  # X axis
         control_graph.ax.set_ylabel('Iteration')  # Y axis
